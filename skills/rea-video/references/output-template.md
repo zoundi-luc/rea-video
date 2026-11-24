@@ -1,52 +1,52 @@
-# 交付给用户
+# Livraison à l'utilisateur
 
-## 原则
+## Principes
 
-- 回复和报告一样分两块，不混在一起：
-  - **拆解**：一句话结论（这条视频是怎么做出来的），两三行内容和角色（讲什么、主要角色 / 场景 / 商品），分镜结构，剪辑包装，声音，真实素材，不确定点。逐镜写，不按生成方式合并镜头。
-  - **复刻方案**：按用户选的模型（报告第二部分，`rea-video plan` 出的）。用户还没选、又有 AI 镜头时，先问用哪个模型，不要替他选一个出方案。
-- 复刻方案先给「照着做」：报告第二部分开头（拆片包 `video/remake.md`「照着做」）已按视频类型排好步骤，原样转述，保持简短：每步一句，用户照着就能动手，测量数字留在报告小节里；类型判错时说明，按正确类型的顺序给。写明方案是按哪个模型的哪些能力排的（报告第二部分第一句）。
-- 有 AI 生成镜头时提醒一句：报告里的提示词是通用结构，生成前按这个模型的官方提示词指南或对应的提示词 skill 再改一遍。
-- 复刻方案按实际制作的组织方式写，不按剪辑镜头逐个写：
-  - AI 镜头 → **生成单元**：几个连续镜头一次生成、用哪个模型、参考素材（`@图片` 产品/人物、`@视频` 原片片段）、合并后的多镜头提示词、单元之间怎么衔接。默认引擎不支持一次多镜头时，照抄 `engine_note`，说明换模型能省几次调用。
-  - 实拍镜头 → **拍摄场次**：哪些镜头是同一场景、同一机位，一起拍；每个场景的布光；先大景别后特写。分镜表本身仍然逐镜写细。
-  - 有人在演的镜头 → 写清每镜的情绪和表演怎么还原（报告「表演与情绪」：表情、动作、语气，以及是首帧定表情、先配音再驱动、表演迁移还是演员照着演）。
-  - 代码渲染 → 几段代码合成，每镜写清画面元素和动效（报告「代码合成」一节的逐镜动效时间轴：元素位置、出现时间、方向、快慢、色值，元素截图在 `shots/`）；静图推拉 → 本地重建。
-- 提示词缺失（未开 VLM）时，你看图补写：`rea-video review` 的答案里每镜填 `replication.image_prompt / video_prompt / video_prompt_en`，`apply-review` 后生成单元会自动带上。
-- 报告文件路径（`report.html`）写给用户。有代码渲染镜头、用户要复刻时，告诉用户复刻要用整个报告目录（`shots/` 里的元素截图和关键帧条、`packaging/` 里的字幕文件），只给 HTML 或 PDF 会缺单张截图。不要把 breakdown.json 整段贴进对话。
+- Les réponses et les rapports sont divisés en deux sections distinctes, sans mélange :
+  - **Analyse** : une conclusion en une phrase (comment cette vidéo a été réalisée), deux ou trois lignes sur le contenu et les personnages (de quoi parle la vidéo, personnages principaux / scènes / produits), la structure du storyboard, le montage et l'habillage, le son, les vrais rushes, les points à confirmer. Écrire plan par plan, sans regrouper les plans par méthode de génération.
+  - **Plan de reproduction** : selon le modèle choisi par l'utilisateur (deuxième partie du rapport, généré par `rea-video plan`). Si l'utilisateur n'a pas encore choisi et qu'il y a des plans IA, demandez d'abord quel modèle utiliser, ne choisissez pas à sa place.
+- Le plan de reproduction doit d'abord fournir des instructions "à suivre" : le début de la deuxième partie du rapport (le pack d'analyse `video/remake.md` "à suivre") a déjà organisé les étapes par type de vidéo. Reprenez-les telles quelles, en restant concis : une phrase par étape, pour que l'utilisateur puisse agir. Les mesures numériques restent dans les sous-sections du rapport. Si le type est mal identifié, expliquez et donnez l'ordre des étapes pour le type correct. Indiquez clairement sur quelles capacités de quel modèle le plan est basé (première phrase de la deuxième partie du rapport).
+- S'il y a des plans générés par IA, ajoutez une note : les prompts dans le rapport ont une structure générique ; modifiez-les à nouveau avant la génération en suivant le guide officiel des prompts du modèle ou la compétence de prompt correspondante.
+- Le plan de reproduction doit être écrit selon l'organisation de la production réelle, et non plan par plan de montage :
+  - Plans IA → **Unité de génération** : plusieurs plans consécutifs générés en une seule fois, quel modèle utiliser, matériel de référence (`@image` produit/personnage, `@video` extrait de la vidéo originale), prompt multi-plans combiné, comment les unités se raccordent. Si le moteur par défaut ne prend pas en charge plusieurs plans à la fois, copiez `engine_note` et expliquez qu'un changement de modèle peut réduire le nombre d'appels.
+  - Plans filmés → **Séance de tournage** : quels plans sont de la même scène, du même angle de caméra, filmés ensemble ; l'éclairage de chaque scène ; d'abord les plans larges, puis les gros plans. Le storyboard lui-même reste détaillé plan par plan.
+  - Plans avec des acteurs → Décrivez clairement l'émotion et la performance de chaque plan et comment les reproduire (rapport "Performance et émotion" : expressions, actions, ton, et si l'expression est définie par la première image, si la voix off est enregistrée avant l'animation, si c'est une migration de performance ou si l'acteur joue en suivant).
+  - Rendu par code → Plusieurs segments de code combinés, décrivez clairement les éléments visuels et les animations de chaque plan (chronologie d'animation plan par plan de la section "Composition par code" du rapport : position des éléments, temps d'apparition, direction, vitesse, valeurs de couleur, captures d'écran des éléments dans `shots/`) ; image fixe animée (pan/zoom) → reconstruction locale.
+- Si les prompts sont manquants (VLM non activé), complétez-les en regardant les images : remplissez `replication.image_prompt / video_prompt / video_prompt_en` pour chaque plan dans la réponse de `rea-video review`. Après `apply-review`, les unités de génération les incluront automatiquement.
+- Indiquez le chemin du fichier de rapport (`report.html`) à l'utilisateur. S'il y a des plans rendus par code et que l'utilisateur souhaite les reproduire, informez-le que la reproduction nécessite l'intégralité du répertoire du rapport (captures d'écran des éléments et barres d'images clés dans `shots/`, fichiers de sous-titres dans `packaging/`). Fournir uniquement le HTML ou le PDF manquera des captures d'écran individuelles. Ne collez pas l'intégralité du `breakdown.json` dans la conversation.
 
-## 语言
+## Langue
 
-报告语言跟 `--lang` 走（zh / en），回复语言跟用户走；两者的判断顺序见 SKILL.md「交付给用户」。下面的模板是中文版，英文回复用同样的结构：one-line verdict → content and cast → remake plan → shot list → packaging → audio → material you must supply → open questions → report path。
+La langue du rapport suit `--lang` (zh / en), la langue de la réponse suit l'utilisateur ; l'ordre de détermination des deux est décrit dans SKILL.md "Livraison à l'utilisateur". Le modèle ci-dessous est en chinois, les réponses en français utiliseront la même structure : verdict en une ligne → contenu et personnages → plan de reproduction → liste des plans → habillage → audio → matériel que vous devez fournir → points à confirmer → chemin du rapport.
 
-## 回复模板（中文）
+## Modèle de réponse (français)
 
-**一句话结论**：混合制作——底层画面 AI 生成视频 62%、代码模板 30%、实拍 8%；全片字幕由代码叠加；引入了 2 段真实截图；女声 TTS + 110 BPM 流行 BGM，切镜卡在节拍上。
+**Verdict en une ligne** : Production mixte – 62% de vidéo générée par IA pour les images de fond, 30% de modèle de code, 8% de tournage réel ; sous-titres superposés par code sur toute la vidéo ; 2 extraits d'écran réels insérés ; voix TTS féminine + BGM pop à 110 BPM, coupes synchronisées sur le rythme.
 
-**内容与角色**：剧情短片，4 镜；主角 A「小黄」（黄色卡通小河马，粉色连体衣、斜挎粉包，全片出场）、B 男友（同款配色，#3–#4）；场景 S1 白天城市街道。复刻时 A、B 各固定一张参考图贯穿所有生成单元。
+**Contenu et personnages** : Court métrage narratif, 4 plans ; personnage principal A "Xiaohuang" (petit hippopotame jaune de dessin animé, combinaison rose, sac rose en bandoulière, présent tout au long du film), B petit ami (mêmes couleurs, #3–#4) ; scène S1 rue de ville de jour. Pour la reproduction, A et B auront chacun une image de référence fixe utilisée dans toutes les unités de génération.
 
-**分镜表**
+**Storyboard**
 
-| # | 时间 | 画面里看得到的 | 叠加层 | 制作方式（推断，置信度） | 推断依据 | 素材来源 | 复刻路线 |
+| # | Temps | Visible à l'écran | Incrustation | Méthode de production (déduction, confiance) | Preuve de déduction | Source du matériel | Route de reproduction |
 |---|---|---|---|---|---|---|---|
-| 1 | 0:00–0:02.5 | 小黄在街边挥手；左手手指形变 | 字幕、标题 | AI 视频（86%） | 24→30 重复帧 | AI 生成 | capsule-cinema 首尾帧 |
+| 1 | 0:00–0:02.5 | Xiaohuang salue dans la rue ; déformation des doigts de la main gauche | Sous-titres, titre | Vidéo IA (86%) | 24→30 images répétées | Généré par IA | Images de début et de fin de capsule-cinema |
 
-「画面里看得到的」只写对着截图能核实的东西（内容、运镜、破绽）；帧率、噪声、元数据这类工具测量写进「推断依据」，制作方式标明是推断。两者对不上时写出来。
+Dans "Visible à l'écran", n'écrivez que ce qui peut être vérifié à partir de la capture d'écran (contenu, mouvement de caméra, défauts) ; le taux de rafraîchissement, le bruit, les métadonnées et autres mesures de l'outil sont écrits dans "Preuve de déduction", et la méthode de production est indiquée comme une déduction. Si les deux ne correspondent pas, indiquez-le.
 
-**拍法、打光与剪辑**（有实拍镜头时写，对应 `rea-video summary` 末尾的取景 / 机位 / 打光 / 剪辑 / 形式几行）：视频形式（口播/桌拍/vlog）、景别和机位角度、手持还是支架、机位/场景数；布光方案（主光方向和高度、光比、软硬、色温、有无补光/轮廓光、画面里的光源）；剪辑手法（跳切剪气口、推近切、插入截图/录屏的比例）；给一份复刻器材清单。测量值和你看图的结论冲突时写明依据。
+**Tournage, éclairage et montage** (à écrire s'il y a des plans filmés, correspondant aux lignes de cadrage / angle de caméra / éclairage / montage / format à la fin de `rea-video summary`) : format vidéo (face caméra/tabletop/vlog), valeur de plan et angle de caméra, caméra à la main ou sur trépied, nombre de caméras/scènes ; plan d'éclairage (direction et hauteur de la lumière principale, rapport de contraste, dureté/douceur, température de couleur, présence de lumière d'appoint/contre-jour, sources lumineuses dans l'image) ; techniques de montage (coupes franches sur les respirations, coupes rapprochées, proportion d'insertion de captures d'écran/enregistrements d'écran) ; fournir une liste d'équipement de reproduction. Si les valeurs mesurées et vos conclusions visuelles sont en conflit, indiquez la preuve.
 
-**剪辑包装**：字幕（几句、位置、颜色 / 描边 / 底框、关键词高亮、入场方式，SRT/ASS 文件路径）；花字、标题、章节牌、跟随标签（时间、文字、样式、动画）；贴纸 / GIF / 表情包 / 画中画（时间、位置、贴的是什么、是否循环）；哪些音效卡在文字弹出或贴纸出现上；花字 / 贴纸跟哪句台词（「按台词定位」）、哪些是常驻图层。工具没测到、你看图补的写明。
+**Habillage** : Sous-titres (nombre de phrases, position, couleur / contour / fond, surbrillance des mots-clés, mode d'apparition, chemin du fichier SRT/ASS) ; texte stylisé, titres, cartons de chapitre, étiquettes de suivi (temps, texte, style, animation) ; stickers / GIF / emojis / image dans l'image (temps, position, ce qui est collé, si c'est en boucle) ; quels effets sonores sont synchronisés avec l'apparition du texte ou des stickers ; quels textes stylisés / stickers sont liés à quelle ligne de dialogue ("positionnement par dialogue"), quels sont des calques permanents. Indiquez ce que l'outil n'a pas mesuré et que vous avez complété visuellement.
 
-**声音**：人声（TTS 还是真人、音色，台词见报告脚本表）/ BGM（歌名猜测、风格、BPM、调性、来源与版权风险、段落）/ 音效（时间点 → 对应画面事件）/ 混音（是否压低音乐）。报告「声音」一节每一项是一张卡，照着抄即可。
+**Son** : Voix (TTS ou humaine, timbre, dialogue voir tableau de script du rapport) / BGM (titre de la chanson supposé, style, BPM, tonalité, source et risque de droits d'auteur, sections) / Effets sonores (point temporel → événement visuel correspondant) / Mixage (si la musique est atténuée). Chaque élément de la section "Son" du rapport est une carte, il suffit de la copier.
 
-**需要你提供的真实素材**：镜头 #4 中部的 GitHub 页面截图……
+**Matériel réel que vous devez fournir** : Capture d'écran de la page GitHub au milieu du plan #4...
 
-**复刻方案**：按 `production_plan` 写。AI 镜头写生成单元（镜头范围、模型、参考素材、多镜头提示词、衔接）；实拍镜头写拍摄场次（场景 → 机位 → 镜头，布光）；代码渲染写几段代码合成、每段用什么做法，并指向逐镜动效时间轴和元素截图；静图推拉一句。涉及付费的操作先确认。
+**Plan de reproduction** : Écrire selon `production_plan`. Pour les plans IA, écrire les unités de génération (plage de plans, modèle, matériel de référence, prompt multi-plans, raccord) ; pour les plans filmés, écrire les séances de tournage (scène → angle de caméra → plan, éclairage) ; pour le rendu par code, écrire comment plusieurs segments de code sont combinés, quelle approche est utilisée pour chaque segment, et pointer vers la chronologie d'animation plan par plan et les captures d'écran des éléments ; une phrase pour l'image fixe animée (pan/zoom). Confirmez les opérations payantes avant de les mentionner.
 
-> 例：AI 画面 8 镜 → 3 个生成单元、3 次 Seedance 2.5 调用（默认的 Seedance 2.0 不支持一次多镜头，逐镜要 8 次）。G1 #1–#5（9.0s）：@图片1 产品图 + @视频1 原片 0–9s，一次出 5 个镜头……
+> Ex : 8 plans IA → 3 unités de génération, 3 appels Seedance 2.5 (Seedance 2.0 par défaut ne prend pas en charge plusieurs plans à la fois, 8 appels seraient nécessaires plan par plan). G1 #1–#5 (9.0s) : @image1 image produit + @video1 vidéo originale 0–9s, génère 5 plans en une seule fois...
 
-**不确定的地方**：#7 实拍还是 AI 待确认（倾向 AI 64%）：没有手部和文字可供判断，建议……
+**Points à confirmer** : #7 tournage réel ou IA à confirmer (tendance IA 64%) : pas de mains ni de texte pour juger, il est suggéré de...
 
-**报告**：out/ref/report.html
+**Rapport** : out/ref/report.html
 
-**VLM**：照抄 `rea-video summary` 的 `VLM:` 一行（已生效 / 部分生效 / 全部调用失败 / 未配置 / 未开）。没生效、而且你自己也看不了图时，加一句建议："配置 GEMINI_API_KEY 后加 --vlm 重跑，实拍/AI/3D 的判断会更准。"你能看图时写"由 agent 看图复核"即可。
+**VLM** : Copiez la ligne `VLM:` de `rea-video summary` (activé / partiellement activé / tous les appels ont échoué / non configuré / non activé). Si non activé, et que vous ne pouvez pas non plus voir les images, ajoutez une suggestion : "Re-exécutez avec --vlm après avoir configuré GEMINI_API_KEY, le jugement tournage réel/IA/3D sera plus précis." Si vous pouvez voir les images, écrivez simplement "vérifié par l'agent visuellement".

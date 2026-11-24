@@ -1,20 +1,20 @@
-# 自己动手
+# Faites-le vous-même
 
-用户自己拍、自己剪，或在别的平台（即梦、可灵等网页）手动生成，按报告的拍摄方案和分镜表做，由你把素材拼回原时间线。
+L'utilisateur filme et monte lui-même, ou génère manuellement sur d'autres plateformes (Jiemeng, Keling, etc.), en suivant le plan de tournage et le storyboard du rapport. Vous assemblez ensuite les rushes sur la timeline originale.
 
-## 费用
+## Coût
 
-- rea-video 本身不收费。
-- 在别的平台手动生成，按那个平台收费；实拍的器材、场地自备。
+- `rea-video` est gratuit.
+- La génération manuelle sur d'autres plateformes est facturée par ces plateformes ; le matériel et le lieu de tournage sont à la charge de l'utilisateur.
 
-## 用户要自己做时：帮他接上
+## Quand l'utilisateur le fait lui-même : aidez-le à se connecter
 
-1. 先给报告第二部分「照着做」的步骤（见 `remake.md`「照着做」）和要准备的素材清单（拍什么、每段多长、生成单元的提示词在哪）。
-2. 用户拍好或生成好以后，只要把文件路径发给你，剩下的你来：对应镜头、写 `mine.json`、跑 `rea-video remake`，把 `remake/compare.mp4` 给用户看，并按 `remake/status.md` 说还剩哪些镜头和声音要做。
+1. Donnez d'abord les étapes de la deuxième partie du rapport « Suivez les instructions » (voir `remake.md` « Suivez les instructions ») et la liste des rushes à préparer (quoi filmer, la durée de chaque segment, où trouver les prompts pour les unités de génération).
+2. Une fois que l'utilisateur a filmé ou généré, il vous envoie simplement les chemins des fichiers, et vous vous occupez du reste : faire correspondre les plans, écrire `mine.json`, exécuter `rea-video remake`, montrer `remake/compare.mp4` à l'utilisateur, et lui indiquer les plans et sons restants à faire selon `remake/status.md`.
 
-## 拼回原时间线
+## Réassembler sur la timeline originale
 
-1. 按分镜表（`report.md` 的镜头号和时长）把素材对应到镜头。一条长素材覆盖多个镜头时，先用 ffmpeg 按动作切开；拿不准对应关系时给用户看截图确认。
-2. 写进 `out/ref/remake/mine.json`：`{"results": {"<镜头号>": {"video": "<素材绝对路径>"}, ...}}`。手动生成的「生成单元」视频覆盖多个镜头时，写成 `{"G2": {"unit": "G2", "shots": [4, 5, 6], "video": "<路径>", "trim_to": <单元秒数>}}`，`remake` 会按原片切点拆回各个镜头。
-3. `rea-video remake out/ref`：每段素材按动作对上原片这一镜的节奏塞进原镜头时长（动作起止、高点落在原片的时间上；最多快 3 倍、慢 1.25 倍，超出部分再裁；没什么动作的素材整段匀速变速），切点按原片帧号对齐、不会越拼越偏，没填的镜头暂时用原片占位，声音沿用原片；输出 `remake/remake.mp4`、左右对比的 `remake/compare.mp4` 和 `remake/status.md`。告诉用户哪些镜头还是原片占位、声音还要换。只想拼不想重画代码镜头时用 `rea-video assemble out/ref/breakdown.json <results.json 路径>`。
-   - 字幕叠回（`remake` 默认叠，`assemble` 要加 `--overlays`）：把测得的字幕 / 花字 / 标题按原样式叠到换掉的镜头上（原片占位的镜头本来就有字，不重复叠）。字体是通用无衬线体，颜色和底框是测量值，可能和原片有出入；贴纸只在 `assemble_log.json` 的 `stickers_to_add` 里列出来，要自己找素材贴。
+1. Faites correspondre les rushes aux plans selon le storyboard (numéro de plan et durée dans `report.md`). Si un rush long couvre plusieurs plans, utilisez d'abord ffmpeg pour le découper par action ; si vous n'êtes pas sûr de la correspondance, montrez des captures d'écran à l'utilisateur pour confirmation.
+2. Écrivez dans `out/ref/remake/mine.json` : `{"results": {"<numéro de plan>": {"video": "<chemin absolu du rush>"}, ...}}`. Si une vidéo d'« unité de génération » générée manuellement couvre plusieurs plans, écrivez : `{"G2": {"unit": "G2", "shots": [4, 5, 6], "video": "<chemin>", "trim_to": <secondes de l'unité>}}`. `remake` la découpera en plans individuels selon les points de coupe du film original.
+3. `rea-video remake out/ref` : chaque rush est inséré dans la durée du plan original en faisant correspondre le rythme de l'action au plan original (début/fin de l'action, points culminants alignés sur le temps du film original ; maximum 3x plus rapide, 1.25x plus lent, le surplus est coupé ; les rushes sans action sont accélérés/ralentis uniformément sur toute la durée), les points de coupe sont alignés sur les numéros de trame du film original et ne dériveront pas, les plans non remplis sont temporairement remplacés par le film original, et le son du film original est conservé ; la sortie est `remake/remake.mp4`, `remake/compare.mp4` pour la comparaison côte à côte, et `remake/status.md`. Informez l'utilisateur des plans qui sont encore des remplacements du film original et des sons qui doivent être remplacés. Si vous voulez seulement assembler sans redessiner les plans de code, utilisez `rea-video assemble out/ref/breakdown.json <chemin de results.json>`.
+   - Superposition des sous-titres (`remake` les superpose par défaut, `assemble` nécessite `--overlays`) : les sous-titres / textes stylisés / titres détectés sont superposés sur les plans remplacés dans leur style original (les plans remplacés par le film original ont déjà du texte et ne sont pas superposés à nouveau). La police est une police sans empattement générique, la couleur et le cadre sont des valeurs mesurées et peuvent différer du film original ; les stickers ne sont listés que dans `stickers_to_add` de `assemble_log.json`, vous devez trouver les rushes et les coller vous-même.

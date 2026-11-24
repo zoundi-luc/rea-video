@@ -1,42 +1,42 @@
-# 看图复核规则
+# Règles de révision visuelle
 
-SKILL.md 第 1 节流程的补充：看图结果怎么和工具融合，以及几类容易判错的情况。
+Complément à la section 1 du processus SKILL.md : comment intégrer les résultats de l'analyse visuelle avec l'outil, et les cas où les erreurs de jugement sont fréquentes.
 
-## 融合规则
+## Règles d'intégration
 
-实测得来（仓库 `eval/RESULTS.md`）：
+Déduites des tests réels (répertoire `eval/RESULTS.md`) :
 
-- 只有一个看图来源（只有 VLM 或只有你）时，看图结果只能在工具前两名候选里选。工具对"AI / 实拍 / 数字人"有把握时不改；转码后带 24→30 重复帧的镜头不会仅凭"看起来真"改成实拍。镜头自身没有重复帧（原生 30fps 节奏）时，你的实拍判断会被采纳，哪怕整片因为混了 AI 开场而没被标成原生 30fps；工具前三名都不到 0.4、且你选的类别只比次选差一点时，也以你为准。看图结果在 3D / 代码动效 / 录屏之间的区分最有用。2D 动画、定格动画、影视片段是例外：工具测不出这三类，你判成它们时直接采纳，但只有一方看图时结论保留「待确认」。
-- VLM 和你都答了：先判大类（生成 / 渲染 / 实拍 / 录屏 / 静图），再判细类。工具首选只要有你们其中一方支持（同细类或同大类，比如工具判 AI 视频、你判数字人），就按工具首选的大类；你们两个一致反对工具时，按正常融合。
-- 标了「有分歧」的镜头（工具和 VLM 对是不是实拍意见相反）必看：核对 VLM 写的证据在截图里是否真的看得见，VLM 会编理由。
-- review_tasks.json 里写着"用户过去 n 次把工具判的 X 改成 Y"的镜头，是用户反复纠正过的类型，要重点看。
+- Lorsqu'il n'y a qu'une seule source d'analyse visuelle (seulement le VLM ou seulement vous), le résultat de l'analyse visuelle ne peut être choisi que parmi les deux premières options de l'outil. L'outil ne sera pas modifié s'il est sûr de "IA / tournage réel / avatar IA" ; un plan avec des images répétées 24→30 après transcodage ne sera pas modifié en tournage réel simplement parce qu'il "semble réel". Si le plan lui-même n'a pas d'images répétées (rythme natif de 30 ips), votre jugement de tournage réel sera accepté, même si le film entier n'a pas été marqué comme natif 30 ips en raison d'un mélange d'IA au début ; si les trois premières options de l'outil sont inférieures à 0,4 et que la catégorie que vous avez choisie n'est que légèrement inférieure à la deuxième meilleure option, votre jugement prévaudra également. Le résultat de l'analyse visuelle est le plus utile pour distinguer entre le rendu 3D / le rendu par code / la capture d'écran. L'animation 2D, l'animation image par image (stop motion) et les extraits de film/série sont des exceptions : l'outil ne peut pas détecter ces trois catégories, et votre jugement sera directement accepté si vous les choisissez, mais la conclusion restera "point à confirmer" si une seule partie a effectué l'analyse visuelle.
+- Le VLM et vous avez tous deux répondu : jugez d'abord la catégorie principale (génération / rendu / tournage réel / capture d'écran / image fixe), puis la sous-catégorie. Si la première option de l'outil est soutenue par l'un de vous (même sous-catégorie ou même catégorie principale, par exemple l'outil juge vidéo IA, vous jugez avatar IA), suivez la catégorie principale de la première option de l'outil ; si vous êtes tous deux en désaccord avec l'outil, suivez l'intégration normale.
+- Les plans marqués "désaccord" (l'outil et le VLM ont des opinions opposées sur le fait qu'il s'agisse d'un tournage réel) doivent être examinés : vérifiez si les preuves écrites par le VLM sont réellement visibles dans la capture d'écran, car le VLM peut inventer des raisons.
+- Les plans où `review_tasks.json` indique "l'utilisateur a modifié X jugé par l'outil en Y n fois par le passé" sont des types que l'utilisateur a corrigés à plusieurs reprises et doivent être examinés attentivement.
 
-## 看不了图时的规则（重要）
+## Règles lorsque l'image ne peut pas être vue (important)
 
-先确认你自己能不能看图（能不能读 `storyboard.jpg`、`shots/*.jpg` 并描述画面内容）。**看不了图、又没开 VLM 时：**
+Confirmez d'abord si vous pouvez voir l'image (si vous pouvez lire `storyboard.jpg`, `shots/*.jpg` et décrire le contenu de l'image). **Si vous ne pouvez pas voir l'image et que le VLM n'est pas activé :**
 
-- **不要推翻工具对制作方式的判断**（实拍 / AI / 3D / 代码 / 录屏）。像素统计（用色数、平坦块、噪声）正是工具已经用过的证据，你再用一遍只会得出同样或更差的结论。实测：看不了图的 agent 把 AI 生成的铅笔素描判成"白底版式卡"、把玻璃质感 3D 元素判成"代码界面"。
-- 你能做、也应该做的：核对时间轴和切点、读 OCR 文字轨甄别误读、用 `stems/` 的电平判断有没有人声、读元数据（AIGC 标识、平台转码标记）、把工具的低置信镜头列进"不确定点"。
-- 一句话结论里写明"未开 VLM、未看画面"，并把工具标了"实拍还是 AI 待确认"的镜头原样保留为待确认。
+- **Ne rejetez pas le jugement de l'outil sur la méthode de production** (tournage réel / IA / 3D / code / capture d'écran). Les statistiques de pixels (nombre de couleurs, blocs plats, bruit) sont des preuves déjà utilisées par l'outil, et les réutiliser ne fera que produire les mêmes conclusions ou de moins bonnes. Test réel : l'agent qui ne pouvait pas voir l'image a jugé un croquis au crayon généré par IA comme une "carte de mise en page sur fond blanc" et des éléments 3D texturés en verre comme une "interface de code".
+- Ce que vous pouvez et devez faire : vérifier la chronologie et les points de coupe, lire la piste de texte OCR pour identifier les erreurs de lecture, utiliser les niveaux de `stems/` pour déterminer la présence de voix, lire les métadonnées (identifiants AIGC, marques de transcodage de plateforme), et lister les plans à faible confiance de l'outil dans les "points incertains".
+- Indiquez clairement dans la conclusion en une phrase "VLM non activé, image non vue", et conservez les plans marqués par l'outil comme "tournage réel ou IA à confirmer" tels quels.
 
-## 原片 / 参考片：判 AI 前先写反方证据
+## Matériel original / de référence : écrivez d'abord les preuves contraires avant de juger l'IA
 
-只有一个连续镜头、没有 AIGC 标识、也没有 24→30 重复帧的写实或手作质感视频（定格动画、俯拍生活片、手作微缩场景），工具常会判成 AI。看图后如果找不到明确的 AI 破绽（形变、纹理闪烁、物理错误、文字乱码），**不要给高置信度**：写成"AI 还是实拍 / 定格动画待确认（倾向 X）"，列出正反两方的证据，置信度不超过 0.7。
+Pour une vidéo réaliste ou artisanale (animation image par image, vidéo de vie filmée en plongée, scènes miniatures faites à la main) qui ne contient qu'un seul plan continu, sans identifiant AIGC, et sans images répétées 24→30, l'outil la jugera souvent comme de l'IA. Si, après avoir vu l'image, vous ne trouvez pas de défauts clairs de l'IA (déformation, scintillement de texture, erreurs physiques, texte corrompu), **ne donnez pas une confiance élevée** : écrivez "IA ou tournage réel / animation image par image à confirmer (tendance X)", listez les preuves pour et contre, et ne dépassez pas 0,7 de confiance.
 
-## 影视解说、混剪：先判是不是剪进来的影视片段
+## Commentaires de films, montages : déterminez d'abord s'il s'agit d'extraits de films/séries
 
-画面嵌在黑边里时，工具会在证据里写「影视片段线索」，并把镜头标成「AI 视频还是影视片段待确认」或「实拍还是影视片段待确认」。工具测不出谁拍的，这一步要你看图：
+Lorsque l'image est encadrée de barres noires, l'outil écrira "indice d'extrait de film/série" dans les preuves et marquera le plan comme "vidéo IA ou extrait de film/série à confirmer" ou "tournage réel ou extrait de film/série à confirmer". L'outil ne peut pas déterminer qui a filmé, cette étape nécessite votre analyse visuelle :
 
-- 认得出演员或剧集、剧组规模的布光和布景、群演、台标或平台水印、清楚可读的场景文字 → `film_footage`。
-- 脸过于完美、不同角色长得很像、手和文字出错、纹理漂移 → `ai_video`（AI 短剧解说的版式和真人剧解说一模一样，别只看版式）。
-- 作者自己出镜的口播、插进来的截图或 AI 画面，按镜头分别标。
-- `live_action` 只给作者或客户自己拍的画面。
+- Reconnaissance d'acteurs ou de séries, éclairage et décors à l'échelle d'une équipe de tournage, figurants, logos de chaînes ou filigranes de plateformes, texte de scène clair et lisible → `film_footage`.
+- Visages trop parfaits, personnages différents se ressemblant beaucoup, erreurs de mains et de texte, dérive de texture → `ai_video` (le format des commentaires de courts métrages IA est identique à celui des commentaires de séries avec de vrais acteurs, ne vous fiez pas uniquement au format).
+- Les prises de parole de l'auteur face caméra, les captures d'écran insérées ou les images IA, sont marquées séparément par plan.
+- `live_action` est uniquement pour les images filmées par l'auteur ou le client lui-même.
 
-## 平台转码视频（微信 / 抖音 / TikTok 下载的文件）
+## Vidéos transcodées par la plateforme (fichiers téléchargés depuis WeChat / Douyin / TikTok)
 
-元数据里有 `Tencent CAPD MTS`、`Wxmm_`、`vid:v…` 时，工具会标 `video_context.transcoded`。二次压缩会抹掉传感器噪声、带来假的插帧节奏，所以：
+Lorsque les métadonnées contiennent `Tencent CAPD MTS`, `Wxmm_` ou `vid:v…`, l'outil marquera `video_context.transcoded`. La recompression efface le bruit du capteur et introduit un faux rythme d'interpolation d'images, donc :
 
-- 噪声类证据失效，"没有噪声"不再说明是 AI；工具会把这类镜头标成"实拍还是 AI 待确认"。
-- 仍然可靠的证据：24→30 的重复帧（生成模型多输出 24fps；整片原生 30fps、没有重复帧更像手机直出）、AIGC 隐式标识、画面内容（真手、真实环境、物理是否自然——这一条必须看图或开 VLM）。
-- 证据冲突时的优先级：**规律的 24→30 重复帧 + AIGC 隐式标识**同时存在时，比"看图没发现 AI 破绽"更有分量，不要据此把镜头改判成实拍；最多写"倾向 AI，实拍待确认"。反过来，整片原生 30fps、无重复帧、无 AIGC 标识，再加上看图画面正常，才判实拍。
-- 重新压缩过、平台标记被抹掉的文件（下载工具去了元数据、仓库 `docs/cases/videos/` 的样片）不会被标成转码，但同样有假的插帧节奏。只有「清晰度周期起伏」、没有重复帧的镜头，工具会标「AI 还是实拍待确认」，看图结论可以直接改判。
+- Les preuves de bruit sont invalidées, "pas de bruit" n'indique plus l'IA ; l'outil marquera ces plans comme "tournage réel ou IA à confirmer".
+- Preuves toujours fiables : images répétées 24→30 régulières (les modèles de génération produisent souvent 24 ips ; un film entier natif 30 ips sans images répétées ressemble plus à une sortie directe de téléphone), identifiants implicites AIGC, contenu de l'image (vraies mains, environnement réel, physique naturelle ou non – ceci doit être vérifié visuellement ou avec le VLM).
+- Priorité en cas de conflit de preuves : la présence simultanée d'**images répétées 24→30 régulières + identifiants implicites AIGC** a plus de poids que "l'analyse visuelle n'a pas trouvé de défauts d'IA", ne modifiez pas le jugement du plan en tournage réel sur cette base ; écrivez au maximum "tendance IA, tournage réel à confirmer". Inversement, un film entier natif 30 ips, sans images répétées, sans identifiant AIGC, et avec une image normale après analyse visuelle, est jugé comme tournage réel.
+- Les fichiers recompressés dont les marques de plateforme ont été effacées (outils de téléchargement ayant supprimé les métadonnées, échantillons du répertoire `docs/cases/videos/`) ne seront pas marqués comme transcodés, mais présentent également un faux rythme d'interpolation d'images. Les plans avec seulement des "fluctuations périodiques de clarté" et sans images répétées seront marqués par l'outil comme "IA ou tournage réel à confirmer", et la conclusion de l'analyse visuelle peut directement modifier le jugement.

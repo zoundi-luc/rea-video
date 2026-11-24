@@ -1,108 +1,108 @@
-# 声音拆解
+# Décomposition audio
 
-工具产出：`breakdown.json` 的 `audio`（测量值）和 `audio_plan`（与 VLM 合并后的结果和复刻方案），以及 `audio.png` 时间轴。
+Sortie de l'outil : `audio` (mesures) et `audio_plan` (résultats fusionnés avec le VLM et plan de reproduction) dans `breakdown.json`, ainsi que la chronologie `audio.png`.
 
-## 能信多少
+## Fiabilité
 
-| 项 | 方法 | 可靠度（capsule-cinema 样本） |
+| Élément | Méthode | Fiabilité (échantillons capsule-cinema) |
 |---|---|---|
-| 有无人声 | 人声频段的音节调制（3–8Hz），加上句间停顿 | 高 |
-| 有无 BGM | 人声间隙里仍有响亮、有音调的声音（谐波占比 >0.62）；没有人声时看谐波持续性；或者有明显节拍周期。整段只有一个音高（测试音、蜂鸣、带谐波的电流嗡声，底下有点底噪也一样）不算音乐，记为 `steady_tone` | 高 |
-| BPM | 打击成分起音包络的自相关，同时给出半速/倍速候选；持续音、长音铺底这类几乎没有打击成分的声音报「无明显节拍」，不给 BPM；打击成分很少、周期也很弱的（没有鼓的铺底）同样不给 | 高（咸鸭蛋 110.0 vs 真值 110.15） |
-| 调性 | 色度 + Krumhansl 调性轮廓 | 中高（两条真值都对：D major） |
-| 段落变化 | 色度和响度的新颖度峰值 | 中 |
-| 音效 | 人声段落之外非常突出的瞬态，且不在节拍上；有 BGM 时要求更突出；瞬态处要有真实的打击能量（持续音的压缩噪声不算），音轨最后 0.1 秒的截断声不算 | **低**：在人声 + BGM 的混音里，信号层面实测精度只有约 0.2，轻音效基本测不出。音效清单以 VLM 为准 |
-| TTS 还是真人 | 交给 VLM | — |
-| 男声 / 女声 | 基频中位数（<150Hz 偏男声，>200Hz 偏女声） | 中，只作参考 |
-| 卡点剪辑 | 切点落在节拍上的比例 vs 随机概率 | 中高 |
+| Présence de voix | Modulation syllabique dans la bande vocale (3–8 Hz), plus pauses entre les phrases | Élevée |
+| Présence de BGM | Son fort et mélodique (rapport harmonique > 0,62) persistant dans les pauses vocales ; persistance harmonique en l'absence de voix ; ou rythme évident. Une seule hauteur de son sur toute la section (son de test, bip, bourdonnement électrique avec harmoniques, même avec un peu de bruit de fond) n'est pas considérée comme de la musique, mais comme `steady_tone`. | Élevée |
+| BPM | Autocorrélation de l'enveloppe d'attaque des composants percussifs, avec des candidats à mi-vitesse/double vitesse ; les sons soutenus, les nappes longues sans composants percussifs sont signalés comme "pas de rythme évident", sans BPM ; les sons avec très peu de composants percussifs et un rythme très faible (nappes sans batterie) ne reçoivent pas non plus de BPM. | Élevée (œuf salé 110,0 vs valeur réelle 110,15) |
+| Tonalité | Chromaticité + profil de tonalité de Krumhansl | Moyenne-élevée (les deux valeurs réelles sont correctes : Ré majeur) |
+| Changement de section | Pics de nouveauté de la chromaticité et de la sonie | Moyenne |
+| Effets sonores | Transitoires très prononcés en dehors des sections vocales, et non sur le rythme ; plus prononcés en présence de BGM ; les transitoires doivent avoir une énergie percussive réelle (le bruit de compression des sons soutenus ne compte pas), le son tronqué des 0,1 dernières secondes de la piste ne compte pas. | **Faible** : dans un mix voix + BGM, la précision mesurée au niveau du signal n'est que d'environ 0,2, les effets sonores légers sont pratiquement indétectables. La liste des effets sonores est basée sur le VLM. |
+| TTS ou voix humaine | Laissé au VLM | — |
+| Voix masculine / féminine | Médiane de la fréquence fondamentale (<150 Hz tend vers la voix masculine, >200 Hz tend vers la voix féminine) | Moyenne, à titre indicatif seulement |
+| Montage rythmique | Proportion de coupes tombant sur le rythme vs probabilité aléatoire | Moyenne-élevée |
 
-## 剥离音轨
+## Séparation des pistes audio
 
-`decompose` 默认把声音剥成三条轨，放在 `stems/` 下（`rea-video stems <视频>` 可以只做这一步）：
+`decompose` sépare par défaut le son en trois pistes, placées sous `stems/` (`rea-video stems <vidéo>` peut faire uniquement cette étape) :
 
-| 文件 | 内容 |
+| Fichier | Contenu |
 |---|---|
-| `original.wav` | 原声（视频里的完整混音） |
-| `vocals.wav` | 人声干声：旁白、口播、歌声。注意：键盘声、"叮"之类的瞬态音效也会落在这里 |
-| `music.wav` | 配乐（音效响起的地方已扣掉） |
-| `voice_S1.wav`、`voice_S2.wav` … | 有两个以上说话人时，每人一条：人声干声里只留这个人说话的段落，长度和原片一致 |
+| `original.wav` | Son original (mixage complet de la vidéo) |
+| `vocals.wav` | Voix isolées : narration, voix off, chant. Attention : les sons de clavier, les transitoires comme les "ding" peuvent aussi se retrouver ici. |
+| `music.wav` | Musique d'accompagnement (les endroits où les effets sonores se produisent sont soustraits) |
+| `voice_S1.wav`, `voice_S2.wav`… | S'il y a plus de deux locuteurs, une piste par personne : seule la section parlée par cette personne est conservée dans les voix isolées, la longueur est la même que celle de la vidéo originale. |
 
-模型是 UVR MDX-Net Inst HQ 3（ONNX，CPU 即可，首次运行从 GitHub 下载约 67 MB，缓存在 `~/.cache/rea-video/models`，可用 `REA_VIDEO_MODELS` 改位置）。实测 TTS + Suno BGM 混音分离 SDR 约 19.7 dB；纯 BGM 漏进人声轨 −42 dB。约 0.6 倍实时（4 核）。
+Le modèle est UVR MDX-Net Inst HQ 3 (ONNX, CPU suffisant, premier lancement télécharge environ 67 Mo depuis GitHub, mis en cache dans `~/.cache/rea-video/models`, peut être modifié avec `REA_VIDEO_MODELS`). La séparation du mixage TTS + Suno BGM a une SDR mesurée d'environ 19,7 dB ; la fuite de BGM pure dans la piste vocale est de −42 dB. Environ 0,6 fois le temps réel (4 cœurs).
 
-复核时**直接听 vocals.wav 和 music.wav**，比听混音容易判断：人声是唱还是说、是不是 TTS，配乐有没有人声、结尾是不是被截断。
+Lors de la vérification, **écoutez directement vocals.wav et music.wav**, c'est plus facile à juger que d'écouter le mixage : si la voix chante ou parle, si c'est du TTS, si la musique d'accompagnement contient des voix, si la fin est coupée.
 
-### 说话人
+### Locuteurs
 
-装了 `rea-video[asr]` 时，`decompose` 在人声干声上分出谁在什么时候说话，结果在 `breakdown.json` 的 `speakers`：
+Lorsque `rea-video[asr]` est installé, `decompose` identifie qui parle et quand dans les voix isolées, les résultats se trouvent dans `speakers` de `breakdown.json` :
 
-- `speakers`：每个声音（`S1`、`S2`…，按出场顺序）的秒数、占比、基频和男 / 女声提示；只出现几秒的标 `minor`。
-- `turns`：每一段的起止时间和说话人；`overlaps`：两人同时说话的时间段。
-- 台词 `speech.lines` 每句带 `speaker`；开了 VLM 时角色名按时间对到声音上（`name`）。
+- `speakers` : secondes, pourcentage, fréquence fondamentale et indication homme/femme pour chaque voix (`S1`, `S2`…, par ordre d'apparition) ; celles qui n'apparaissent que quelques secondes sont marquées `minor`.
+- `turns` : heures de début et de fin et locuteur de chaque segment ; `overlaps` : périodes où deux personnes parlent simultanément.
+- Les lignes de dialogue `speech.lines` incluent `speaker` ; lorsque le VLM est activé, les noms des personnages sont associés aux voix par le temps (`name`).
 
-音色很像的两个人可能被并成一个，同一个人换语气可能被拆成两个：人数要紧时听每个人的音轨确认。`--no-speakers` 可跳过。
+Deux personnes avec des timbres très similaires peuvent être fusionnées en une seule, et la même personne changeant de ton peut être divisée en deux : si le nombre de personnes est important, écoutez les pistes de chaque personne pour confirmer. `--no-speakers` permet de sauter cette étape.
 
-## 来源判断：AI 生成还是现成的？
+## Détection de la source : généré par IA ou existant ?
 
-**一句话结论**在 `sound_sources.summary_zh`，格式是"视频类型 → 人声 / 音乐 / 音效来源"：
+**La conclusion en une phrase** se trouve dans `sound_sources.summary_zh`, au format "Type de vidéo → Source de la voix / musique / effets sonores" :
 
-| 视频类型 | 人声 | 音乐 | 音效 |
+| Type de vidéo | Voix | Musique | Effets sonores |
 |---|---|---|---|
-| 音乐 MV / 歌曲类 | 歌曲自带的演唱 | **AI 生成**（Suno 等）为主 | 音效库 |
-| AI 视频原生出声 | 视频模型生成 | 后期配乐 | 视频模型生成 |
-| 实拍 | 同期声 / 真人配音 | 现成配乐 | 同期声 |
-| 旁白/口播 + 配乐 | TTS 或真人配音 | **现成曲库**为主（AI 工作流也常用 Suno 垫乐） | 音效库 |
-| 纯配乐 | — | 现成曲库 | 音效库 |
+| MV musical / Chanson | Chant intégré à la chanson | Principalement **généré par IA** (Suno, etc.) | Bibliothèque d'effets sonores |
+| Vidéo IA avec son natif | Généré par le modèle vidéo | Musique d'accompagnement ajoutée en post-production | Généré par le modèle vidéo |
+| Tournage réel | Son direct / Voix off humaine | Musique d'accompagnement existante | Son direct |
+| Narration/Voix off + Musique d'accompagnement | TTS ou voix off humaine | Principalement **bibliothèque de musique existante** (les workflows IA utilisent aussi souvent Suno pour les nappes) | Bibliothèque d'effets sonores |
+| Musique d'accompagnement pure | — | Bibliothèque de musique existante | Bibliothèque d'effets sonores |
 
-工具产出：`breakdown.json` 的 `sound_sources`（music / voice / sfx 各自的 `source`、`leaning`、`probs`、`evidence`、`how_to_confirm`）。
+Sortie de l'outil : `sound_sources` dans `breakdown.json` (pour la musique / voix / effets sonores, `source`, `leaning`, `probs`, `evidence`, `how_to_confirm` respectifs).
 
-### 第一步：先看视频形式（决定先验）
+### Première étape : Examiner le format vidéo (détermine l'a priori)
 
-| 形式 | 怎么认 | 音乐来源先验 |
+| Format | Comment identifier | A priori de la source musicale |
 |---|---|---|
-| **AI 音乐 MV**（整片就是一首带人声的歌） | VLM 说 format=MV；或确定性层：音乐铺满全片（>85%）**且人声是唱的**（`voice.style` = singing / rap_or_rhythmic，在分离出的干声上测） | AI 生成 60%（未开 VLM 时降权为 45%） |
-| **普通视频配乐**（旁白/口播 + 垫底 BGM，或无人声的纯配乐） | 人声是说话（`voice.style` = speech），或没有人声 | 现成曲库 60% |
+| **MV musical IA** (le film entier est une chanson avec voix) | Le VLM indique format=MV ; ou couche de certitude : la musique couvre tout le film (>85 %) **et la voix chante** (`voice.style` = singing / rap_or_rhythmic, mesuré sur les voix isolées) | Généré par IA 60 % (réduit à 45 % si le VLM n'est pas activé) |
+| **Musique d'accompagnement vidéo normale** (narration/voix off + BGM de fond, ou musique d'accompagnement pure sans voix) | La voix parle (`voice.style` = speech), ou pas de voix | Bibliothèque de musique existante 60 % |
 
-"唱"和"说"在**人声干声**上判断，两个信号：
+Le "chant" et la "parole" sont jugés sur les **voix isolées**, avec deux signaux :
 
-- 持续音高（`sustained_note_ratio`）：唱歌会在一个音高上停留 ≥160ms，>0.3 算唱。实测 TTS 旁白 0.14–0.15，说唱 0.24（说唱本来就不拖长音）。
-- 副歌重复（`chorus_repeat_share`）：4 秒的人声旋律片段在 6 秒以后又出现。>0.1 算歌（包括说唱）。实测 AI 说唱 MV 0.26，TTS 旁白 0.00。短视频只截了一段、没有重复的副歌时，这个信号会失效。
+- Hauteur de son soutenue (`sustained_note_ratio`) : le chant reste sur une hauteur de son ≥160 ms, >0,3 est considéré comme du chant. Mesuré : narration TTS 0,14–0,15, rap 0,24 (le rap ne prolonge pas les notes).
+- Répétition de refrain (`chorus_repeat_share`) : un fragment mélodique vocal de 4 secondes réapparaît après 6 secondes. >0,1 est considéré comme une chanson (y compris le rap). Mesuré : MV de rap IA 0,26, narration TTS 0,00. Ce signal est inefficace si la courte vidéo n'est qu'un extrait sans refrain répété.
 
-### 第二步：用证据修正
+### Deuxième étape : Corriger avec des preuves
 
-| 证据 | 指向 | 权重 |
+| Preuve | Indique | Poids |
 |---|---|---|
-| 歌词唱的就是本片的角色/商品/剧情（VLM `lyrics_match_content`） | AI 生成（定制歌） | 强 |
-| VLM 认出歌名（`song_guess`） | 知名歌曲 | 强 |
-| 平台音乐标签是具体歌名（`--meta`） | 现成曲目 | 强 |
-| 平台标签是「@作者创作的原声」 | 不是平台曲库；MV 类多为 AI 歌 | 中 |
-| 片尾音乐满音量被硬切 | 截取的现成曲目 | 弱 |
-| 音乐和视频一起收尾 | 按片长定制/剪辑（两种都可能） | 很弱 |
-| 文件带 AIGC 隐式标识 | 整片声明含 AI 内容 | 很弱 |
+| Les paroles chantent le personnage/produit/intrigue du film (VLM `lyrics_match_content`) | Généré par IA (chanson personnalisée) | Fort |
+| Le VLM reconnaît le titre de la chanson (`song_guess`) | Chanson connue | Fort |
+| Le tag musical de la plateforme est un titre de chanson spécifique (`--meta`) | Morceau existant | Fort |
+| Le tag de la plateforme est "@son original créé par l'auteur" | Pas une bibliothèque de plateforme ; les MV sont souvent des chansons IA | Moyen |
+| La musique de fin est coupée brutalement à plein volume | Morceau existant extrait | Faible |
+| La musique et la vidéo se terminent ensemble | Personnalisé/édité selon la durée du film (les deux sont possibles) | Très faible |
+| Le fichier contient un identifiant implicite AIGC | Le film entier déclare contenir du contenu IA | Très faible |
 
-最高概率 <45% 时输出"待确认"，同时给出倾向（`leaning`）。
+Si la probabilité la plus élevée est <45 %, la sortie est "à confirmer", avec une tendance (`leaning`).
 
-### 已知陷阱（一定要在回复里提醒）
+### Pièges connus (à toujours rappeler dans la réponse)
 
-**AI 工作流做出来的普通视频，BGM 也常是 Suno 生成的**（capsule-cinema 自己的 monkey_wine、咸鸭蛋、鸟窝都是）。"普通配乐 = 曲库"的先验在这类视频上会错，而纯听感/信号特征分不开 Suno 器乐和曲库器乐。所以普通配乐的结论必须写成"倾向曲库，待确认"，并给出确认方法：
+**Les vidéos normales produites par des workflows IA ont souvent des BGM générées par Suno** (les propres monkey_wine, œufs salés, nids d'oiseaux de capsule-cinema en sont des exemples). L'a priori "musique d'accompagnement normale = bibliothèque" sera faux pour ces vidéos, et les caractéristiques purement auditives/signal ne peuvent pas distinguer l'instrumental Suno de l'instrumental de bibliothèque. Par conséquent, la conclusion pour la musique d'accompagnement normale doit être formulée comme "tendance bibliothèque, à confirmer", et des méthodes de confirmation doivent être fournies :
 
-1. 抖音/小红书原页面的音乐标签（`--meta` 传进来最好）。
-2. 汽水音乐 / QQ 音乐「听歌识曲」或 ACRCloud：识别得到就是现成歌曲；识别不到不代表是 AI（曲库冷门曲也常识别不到）。
-3. 听感：AI 歌咬字含糊、高频发虚带金属感、歌词紧扣画面；AI 器乐常见结构一成不变、结尾突然收住或循环拼接。
+1. Les tags musicaux de la page originale de Douyin/Xiaohongshu (il est préférable de les transmettre via `--meta`).
+2. "Shazam" de Qishui Music / QQ Music ou ACRCloud : si identifié, c'est une chanson existante ; si non identifié, cela ne signifie pas que c'est de l'IA (les morceaux de bibliothèque peu connus sont souvent non identifiables).
+3. Sensation auditive : les chansons IA ont une diction floue, des hautes fréquences faibles avec une sensation métallique, et des paroles étroitement liées à l'image ; l'instrumental IA a souvent une structure inchangée, une fin abrupte ou des boucles.
 
-### 人声和音效的来源
+### Source des voix et des effets sonores
 
-- **人声**：TTS / AI 视频自带人声 / 真人录音。镜头切换处底噪跳变（`per_clip_audio.resets_at_cuts`）说明每段声音跟着画面片段走，是 AI 视频模型原生出声（如 Veo、Seedance 带音频）或实拍同期声。
-- **音效**：多数来自现成音效库（mixkit、爱给等）；AI 视频模型原生出声时音效也跟着片段走。确定性层只能给倾向，清单以 VLM 为准。
+- **Voix** : TTS / voix intégrée à la vidéo IA / enregistrement humain. Les sauts de bruit de fond aux changements de plan (`per_clip_audio.resets_at_cuts`) indiquent que chaque segment audio suit le fragment vidéo, ce qui est le son natif du modèle vidéo IA (comme Veo, Seedance avec audio) ou le son direct du tournage réel.
+- **Effets sonores** : la plupart proviennent de bibliothèques d'effets sonores existantes (mixkit, aigive, etc.) ; lorsque le modèle vidéo IA produit un son natif, les effets sonores suivent également le fragment. La couche de certitude ne peut donner qu'une tendance, la liste est basée sur le VLM.
 
-## 复核方法
+## Méthode de vérification
 
-1. 看 `audio.png`：人声条、音乐条和切镜线是否对得上直觉。
-2. 音效有疑问时，抽那一段画面看看有没有对应事件（文字弹出、转场、动作）：`rea-video tiles`。
-3. VLM 给出 `source_guess=popular_song`，或平台标签是具体歌名时，在复刻方案里写明"需要授权或替换"。
-4. 音乐来源按上面的"来源判断"写，普通配乐不要写成确定的"曲库"。
+1. Regardez `audio.png` : les barres vocales, les barres musicales et les lignes de coupe correspondent-elles à votre intuition.
+2. En cas de doute sur les effets sonores, extrayez cette section de l'image pour voir s'il y a des événements correspondants (texte pop-up, transition, action) : `rea-video tiles`.
+3. Si le VLM donne `source_guess=popular_song`, ou si le tag de la plateforme est un titre de chanson spécifique, indiquez dans le plan de reproduction "nécessite une autorisation ou un remplacement".
+4. Écrivez la source musicale selon la section "Détection de la source" ci-dessus, ne dites pas "bibliothèque" de manière définitive pour la musique d'accompagnement normale.
 
-## 复刻
+## Reproduction
 
-- **人声**：capsule-cinema 的 DoubaoTTSTool / UniversalTTSTool 或 MiniMax 克隆；要卡原时间窗时用时长可控 TTS。
-- **BGM**：按 BPM、调性、情绪用 Suno（UniversalMusicGenerationTool）或曲库；在段落变化点对齐镜头。
-- **音效**：按时间点摆放；有音高的音效对齐 BGM 调性（capsule-cinema plush 配方的 sfx.py / cues.py 就是这样做的）。
+- **Voix** : DoubaoTTSTool / UniversalTTSTool de capsule-cinema ou clone MiniMax ; utilisez un TTS à durée contrôlable si vous devez respecter la fenêtre temporelle d'origine.
+- **BGM** : Utilisez Suno (UniversalMusicGenerationTool) ou une bibliothèque de musique en fonction du BPM, de la tonalité et de l'ambiance ; alignez les points de changement de section avec les plans.
+- **Effets sonores** : Placez-les aux points temporels ; alignez les effets sonores avec une hauteur de son sur la tonalité de la BGM (les recettes sfx.py / cues.py de capsule-cinema font cela).

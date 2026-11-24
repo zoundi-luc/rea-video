@@ -1,12 +1,12 @@
 {
   "name": "rea-video",
-  "owner": { "name": "June" },
-  "metadata": { "description": "拆解一条视频是怎么做出来的，给出复刻方案。" },
+  "owner": { "name": "Zoundi Luc" },
+  "metadata": { "description": "Comprendre comment une vidéo a été faite et obtenir un plan pour la reproduire (rapports en français)." },
   "plugins": [
     {
       "name": "rea-video",
       "source": "./",
-      "description": "逆向拆解视频：逐镜头判断制作方式，拆剪辑包装、声音和真实素材，给出复刻方案。"
+      "description": "Analyse une vidéo plan par plan : méthode de production, habillage, son et vrais rushes, puis un plan de reproduction. Rapports en français."
     }
   ]
 }

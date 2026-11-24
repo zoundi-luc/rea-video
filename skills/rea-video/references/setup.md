@@ -1,68 +1,68 @@
-# 安装与 VLM 配置
+# Installation et configuration du VLM
 
-## 安装（一次性）
+## Installation (une seule fois)
 
 ```bash
-pip install "rea-video[ocr] @ git+https://github.com/JuneYaooo/rea-video"   # 需要 ffmpeg；Python ≥ 3.10
-# 或在仓库里：bash scripts/install_skill.sh（装 CLI 并把 skill 链接到各 agent 目录）
+pip install "rea-video[ocr] @ git+https://github.com/JuneYaooo/rea-video"   # Nécessite ffmpeg ; Python ≥ 3.10
+# Ou dans le dépôt : bash scripts/install_skill.sh (installe la CLI et lie la skill aux répertoires des agents)
 rea-video --help
 ```
 
-**Windows**（`install_skill.sh` 是 bash 脚本，没装 Git Bash 时手动做这几步）：
+**Windows** ( `install_skill.sh` est un script bash, suivez ces étapes manuellement si Git Bash n'est pas installé) :
 
 ```powershell
-winget install Gyan.FFmpeg     # 或 choco install ffmpeg；装完新开一个终端
+winget install Gyan.FFmpeg     # Ou choco install ffmpeg ; ouvrez un nouveau terminal après l'installation
 git clone https://github.com/JuneYaooo/rea-video; cd rea-video
 pip install ".[ocr]"
 New-Item -ItemType Directory -Force "$HOME\.claude\skills" | Out-Null
 New-Item -ItemType Junction -Path "$HOME\.claude\skills\rea-video" -Target "$PWD\skills\rea-video"
 ```
 
-Windows 上 `pip` 用的是 PATH 里第一个 Python：同时装过 3.8 和 3.12 的机器上，默认解释器低于 3.10 时这一步会直接报 `requires a different Python: 3.8.10 not in '>=3.10'`。先 `py -0p` 看有哪些版本，再用 `py -3.12 -m pip install ".[ocr]"`；装完找不到 `rea-video` 命令时，用 `py -3.12 -m rea_video` 运行。
+Sous Windows, `pip` utilise le premier Python dans le PATH : sur une machine avec Python 3.8 et 3.12 installés, si l'interpréteur par défaut est inférieur à 3.10, cette étape échouera avec `requires a different Python: 3.8.10 not in '>=3.10'`. Vérifiez d'abord les versions disponibles avec `py -0p`, puis utilisez `py -3.12 -m pip install ".[ocr]"`. Si la commande `rea-video` n'est pas trouvée après l'installation, exécutez-la avec `py -3.12 -m rea_video`.
 
-`Junction` 不需要管理员权限（`SymbolicLink` 需要）；仓库路径带中文或空格不用特殊处理。`rea-video pdf` 会用 `Program Files` 或 `%LOCALAPPDATA%` 下的 Chrome / Edge，装在别处就设 `REA_CHROME`。
+`Junction` ne nécessite pas de droits d'administrateur (contrairement à `SymbolicLink`) ; les chemins de dépôt contenant des caractères chinois ou des espaces n'ont pas besoin d'être traités spécialement. `rea-video pdf` utilisera Chrome / Edge de `Program Files` ou `%LOCALAPPDATA%` ; si installé ailleurs, définissez `REA_CHROME`.
 
-pip 报 `externally-managed-environment`（Homebrew / 新版 Ubuntu 的系统 Python）时，不要加 `--break-system-packages`，改用
-`pipx install "rea-video[ocr] @ git+https://github.com/JuneYaooo/rea-video"`，或直接跑 `install_skill.sh`（会自动改用 pipx 或仓库内 `.venv`）。
+Si pip signale `externally-managed-environment` (Homebrew / Python système des nouvelles versions d'Ubuntu), n'ajoutez pas `--break-system-packages`, utilisez plutôt
+`pipx install "rea-video[ocr] @ git+https://github.com/JuneYaooo/rea-video"`, ou exécutez directement `install_skill.sh` (qui basculera automatiquement vers pipx ou le `.venv` du dépôt).
 
-报 `onnxruntime` 找不到匹配的安装包（如 `no wheels with a matching Python ABI tag`）时，是默认 Python 太新、依赖还没出对应版本：换一个 3.10–3.14 的解释器，`pipx install --python python3.12 "rea-video[ocr] @ git+https://github.com/JuneYaooo/rea-video"` 或 `PYTHON_BIN=python3.12 bash scripts/install_skill.sh`。`install_skill.sh` 自动选解释器时已经优先 3.10–3.14。3.10–3.14 都能装全 `[ocr]`：3.12 及以下用 `rapidocr-onnxruntime`，3.13 起自动换成 `rapidocr` 3。
+Si `onnxruntime` ne trouve pas de paquet d'installation correspondant (par exemple `no wheels with a matching Python ABI tag`), cela signifie que le Python par défaut est trop récent et que les dépendances n'ont pas encore de version correspondante : changez pour un interpréteur Python 3.10–3.14, `pipx install --python python3.12 "rea-video[ocr] @ git+https://github.com/JuneYaooo/rea-video"` ou `PYTHON_BIN=python3.12 bash scripts/install_skill.sh`. `install_skill.sh` priorise déjà Python 3.10–3.14 lors de la sélection automatique de l'interpréteur. Python 3.10–3.14 peuvent tous installer `[ocr]` : 3.12 et inférieurs utilisent `rapidocr-onnxruntime`, à partir de 3.13, il passe automatiquement à `rapidocr` 3.
 
-在 Python 3.12 及以下手动装了 `[ocr]` 时，OCR 依赖会再装一套 `opencv-python`，和 rea-video 用的 `opencv-python-headless` 抢同一个 `cv2` 目录。装完跑一次：
-`pip uninstall -y opencv-python && pip install --force-reinstall --no-deps "opencv-python-headless>=4.8,<5"`（`install_skill.sh` 会自动做）。
+Si vous avez installé `[ocr]` manuellement avec Python 3.12 ou une version antérieure, les dépendances OCR installeront un ensemble `opencv-python`, qui entrera en conflit avec `opencv-python-headless` utilisé par rea-video pour le même répertoire `cv2`. Après l'installation, exécutez une fois :
+`pip uninstall -y opencv-python && pip install --force-reinstall --no-deps "opencv-python-headless>=4.8,<5"` (`install_skill.sh` le fera automatiquement).
 
-## 本地语音识别（可选）
+## Reconnaissance vocale locale (facultatif)
 
-没有烧录字幕、也没开能听声音的 VLM 时，台词从哪来？装上可选的语音识别：
+D'où viennent les dialogues s'il n'y a pas de sous-titres incrustés et qu'aucun VLM capable d'entendre n'est activé ? Installez la reconnaissance vocale facultative :
 
 ```bash
-pip install "rea-video[ocr,asr] @ git+https://github.com/JuneYaooo/rea-video"   # 已装过就 pip install sherpa-onnx
+pip install "rea-video[ocr,asr] @ git+https://github.com/JuneYaooo/rea-video"   # Si déjà installé, faites pip install sherpa-onnx
 ```
 
-装了之后 `decompose` 会自动在分离出的人声干声上识别（SenseVoice，中 / 英 / 日 / 韩 / 粤；首次使用下载约 160 MB 模型到 `$REA_VIDEO_MODELS`，默认 `~/.cache/rea-video/models`），
-一分钟的片子几秒钟。结果在 `breakdown.json` 的 `speech.lines`（每句有起止时间），报告「脚本」表和 `review_tasks.json` 每镜的 `said` 会用它。`--no-asr` 可跳过。
-台词是孟加拉语时加 `--asr-lang bn`（或 `rea-video prefs asr_lang bn` 设成默认）：SenseVoice 不认孟加拉语，会把它听成英 / 日 / 韩文的乱码；
-`bn` 换用孟加拉语的流式识别模型（另下约 90 MB），`speech.language` 是 `bn`，识别出的句子不带标点。
-同一个可选包还会分出说话人（另下约 35 MB 模型）：多人对话时台词带上是谁说的，并给每人输出一条音轨，见 `audio.md`。
+Une fois installé, `decompose` effectuera automatiquement la reconnaissance sur les pistes vocales isolées (SenseVoice, chinois / anglais / japonais / coréen / cantonais ; la première utilisation télécharge un modèle d'environ 160 Mo vers `$REA_VIDEO_MODELS`, par défaut `~/.cache/rea-video/models`),
+cela prend quelques secondes pour une vidéo d'une minute. Les résultats se trouvent dans `breakdown.json` sous `speech.lines` (chaque phrase a des heures de début et de fin), le tableau "script" du rapport et le champ `said` de chaque plan dans `review_tasks.json` l'utiliseront. `--no-asr` permet de l'ignorer.
+Si les dialogues sont en bengali, ajoutez `--asr-lang bn` (ou `rea-video prefs asr_lang bn` pour le définir par défaut) : SenseVoice ne reconnaît pas le bengali et le transcrira comme du charabia en anglais / japonais / coréen ;
+`bn` utilise un modèle de reconnaissance en continu pour le bengali (téléchargement supplémentaire d'environ 90 Mo), `speech.language` sera `bn`, et les phrases reconnues n'auront pas de ponctuation.
+Le même paquet facultatif séparera également les locuteurs (téléchargement supplémentaire d'environ 35 Mo) : pour les dialogues à plusieurs, les dialogues incluront qui a parlé, et une piste audio sera générée pour chaque personne, voir `audio.md`.
 
-这是机器听写，会有同音错字、专有名词听错：画面上有字幕时以字幕为准，VLM 给了台词时报告用 VLM 的；引用台词给用户时注明"语音识别，未校对"。
-长句里逐句的时间是按字数估的（`timing: estimated`），整段的起止是测出来的。没装时 `speech.reason` 是 `not_installed`，其余照常。
+Il s'agit d'une transcription automatique, il peut y avoir des homophones incorrects et des noms propres mal transcrits : si des sous-titres sont présents à l'écran, ils priment ; si le VLM a fourni les dialogues, le rapport utilisera ceux du VLM ; lors de la citation des dialogues à l'utilisateur, indiquez "reconnaissance vocale, non révisée".
+Les temps phrase par phrase dans les phrases longues sont estimés par le nombre de mots (`timing: estimated`), les débuts et fins de sections entières sont mesurés. Si non installé, `speech.reason` sera `not_installed`, le reste fonctionnera normalement.
 
-## VLM 配置（建议，不强制）
+## Configuration VLM (recommandée, non obligatoire)
 
-**VLM（建议配置，不强制）**：VLM 是能看图/看视频的多模态大模型（Gemini、GPT-4o、豆包、Qwen-VL 等）。不开 VLM，工具只靠像素统计、帧率、OCR、元数据判断，照样能跑完、出报告，但**实拍 / AI / 3D 的区分明显变弱**，音效清单也只有信号层的低置信候选。开了 VLM，工具会把每个镜头的短片段和关键帧发给它，再和确定性结果融合。
+**VLM (configuration recommandée, non obligatoire)** : Un VLM est un grand modèle multimodal capable de visualiser des images/vidéos (Gemini, GPT-4o, Doubao, Qwen-VL, etc.). Sans VLM, l'outil se base uniquement sur les statistiques de pixels, le taux de rafraîchissement, l'OCR et les métadonnées pour fonctionner et générer des rapports, mais la **distinction entre tournage réel / IA / 3D est nettement affaiblie**, et la liste des effets sonores ne contient que des candidats à faible confiance au niveau du signal. Avec un VLM, l'outil envoie de courts extraits vidéo et des images clés de chaque plan au VLM, puis fusionne les résultats avec les résultats déterministes.
 
-两种配置：
+Deux configurations :
 
-- Gemini：设置 `GEMINI_API_KEY`（模型用 `REA_GEMINI_MODEL` 改），走 Gemini 官方接口，连声音一起看视频片段；视频会上传到 Google，用完即删
-- 其他多模态模型：设置 `REA_VLM_BASE_URL` / `REA_VLM_API_KEY` / `REA_VLM_MODEL`（可写多个模型、逗号分隔，前一个失败自动换下一个）。设置了这一组时优先用它
+- Gemini : Définissez `GEMINI_API_KEY` (le modèle peut être modifié avec `REA_GEMINI_MODEL`), utilisez l'API officielle de Gemini pour visualiser les extraits vidéo avec le son ; les vidéos seront téléchargées sur Google et supprimées après utilisation.
+- Autres modèles multimodaux : Définissez `REA_VLM_BASE_URL` / `REA_VLM_API_KEY` / `REA_VLM_MODEL` (vous pouvez spécifier plusieurs modèles séparés par des virgules, le suivant est utilisé si le précédent échoue). Si cet ensemble est défini, il est prioritaire.
 
-用 `--env-file <某个 .env>` 读取配置。**不要把密钥写进对话、仓库或报告，也不要打开 .env 看内容。**
+Utilisez `--env-file <un fichier .env>` pour lire la configuration. **Ne mettez pas les clés secrètes dans les dialogues, les dépôts ou les rapports, et n'ouvrez pas le fichier .env pour en voir le contenu.**
 
-用户没配 VLM 时：照常不加 `--vlm` 跑，不要因此中止任务。
+Si l'utilisateur n'a pas configuré de VLM : exécutez normalement sans `--vlm`, ne mettez pas fin à la tâche pour cette raison.
 
-- **你自己能看图（多模态 agent）**：你就是这次的"VLM"，不需要建议用户另配。按 SKILL.md 第 1 节的「看图复核并入」做：`rea-video review` → 逐镜看图填答案 → `rea-video apply-review`，你的判断会并入工具结论和报告。结论里写"未开 VLM，由 agent 看图复核"。
-- **你看不了图**：遵守 `review.md` 的「看不了图时的规则」，并在回复末尾用一句话建议配置 VLM（说明能提升实拍/AI/3D 的区分和音效识别）。
-- 实测（仓库 eval/RESULTS.md）：agent 看图复核并入比单开 Gemini VLM 更准；Gemini 容易把卡通 3D 风格的 AI 视频判成 3D 渲染、把画进画面的游戏界面判成录屏。所以能看图时**一定要做看图复核**，开了 VLM 也要做，并且独立判断，不要照抄 VLM。
-- 外部 VLM 仍有你替代不了的部分：它能直接看视频片段的运动、听音轨。你只能看静帧、听不了声音时，音效和人声来源照样标"待确认"。
+- **Vous pouvez visualiser les images (agent multimodal)** : Vous êtes le "VLM" pour cette fois, il n'est pas nécessaire de suggérer à l'utilisateur d'en configurer un autre. Suivez la section 1 de SKILL.md "Révision visuelle intégrée" : `rea-video review` → examinez chaque plan et remplissez les réponses → `rea-video apply-review`, votre jugement sera intégré aux conclusions de l'outil et au rapport. Dans les conclusions, écrivez "VLM non activé, révision visuelle effectuée par l'agent".
+- **Vous ne pouvez pas visualiser les images** : Respectez les "Règles en cas d'impossibilité de visualiser les images" de `review.md`, et à la fin de votre réponse, suggérez en une phrase de configurer un VLM (en expliquant que cela peut améliorer la distinction entre tournage réel/IA/3D et la reconnaissance des effets sonores).
+- Tests réels (dépôt eval/RESULTS.md) : la révision visuelle intégrée par l'agent est plus précise que l'utilisation d'un VLM Gemini seul ; Gemini a tendance à juger les vidéos IA de style dessin animé 3D comme des rendus 3D, et les interfaces de jeu incrustées dans l'image comme des captures d'écran. Par conséquent, si vous pouvez visualiser les images, **vous devez effectuer une révision visuelle**, même si un VLM est activé, et juger de manière indépendante, sans copier le VLM.
+- Le VLM externe a toujours des parties que vous ne pouvez pas remplacer : il peut directement visualiser le mouvement des extraits vidéo et écouter les pistes audio. Si vous ne pouvez voir que des images fixes et ne pouvez pas entendre le son, les effets sonores et les sources vocales seront toujours marqués "à confirmer".
 
-**VLM 是否真的生效，以 `rea-video summary` 的 `VLM:` 一行为准**（也在 `breakdown.json` 的 `analysis.vlm.status`）：`ok` 已生效、`partial` 部分镜头有结果、`failed` 请求了但全部调用失败（例如服务端 503）、`not_configured` 请求了但没找到配置、`off` 没请求。`failed` / `not_configured` 等同没开 VLM，报告里要如实写，不能写"已开 VLM"。镜头很多时这一行会写"只送了 a/n 个镜头"：默认最多 60 次调用，没送的镜头只靠确定性取证，需要全看就加 `--max-vlm-shots N` 重跑，或对这些镜头做看图复核。
+**Pour savoir si le VLM est réellement actif, référez-vous à la ligne `VLM:` de `rea-video summary`** (également dans `breakdown.json` sous `analysis.vlm.status`) : `ok` est actif, `partial` certains plans ont des résultats, `failed` a été demandé mais tous les appels ont échoué (par exemple, serveur 503), `not_configured` a été demandé mais aucune configuration n'a été trouvée, `off` n'a pas été demandé. `failed` / `not_configured` équivaut à un VLM non activé, le rapport doit le mentionner honnêtement et ne pas écrire "VLM activé". Si le nombre de plans est élevé, cette ligne indiquera "seulement a/n plans envoyés" : par défaut, un maximum de 60 appels, les plans non envoyés ne dépendent que de preuves déterministes. Pour tout visualiser, relancez avec `--max-vlm-shots N`, ou effectuez une révision visuelle pour ces plans.

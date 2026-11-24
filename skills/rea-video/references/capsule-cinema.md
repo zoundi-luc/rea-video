@@ -1,45 +1,45 @@
 # capsule-cinema
 
-开源的本地生成流程：https://github.com/JuneYaooo/capsule-cinema
+Flux de génération local open-source : https://github.com/JuneYaooo/capsule-cinema
 
-## 能做什么
+## Ce que cela peut faire
 
-rea-video 负责拆解和复刻方案，capsule-cinema 负责生成、拼接和验收。`rea-video remake` / `remake-run` / `assemble` 会转交给它。
+`rea-video` est responsable de la décomposition et de la reproduction des solutions, tandis que `capsule-cinema` est responsable de la génération, de l'assemblage et de la validation. `rea-video remake` / `remake-run` / `assemble` lui seront transférés.
 
-## 费用
+## Coût
 
-- capsule-cinema 本身免费开源，本地部署。
-- 模型和密钥用户自己配，按模型调用计费，费用付给模型平台。
-- 生成前先 `--dry-run` 给用户看调用次数和费用，用户同意再跑。
+- `capsule-cinema` est gratuit, open-source et déployé localement.
+- Les modèles et les clés sont configurés par l'utilisateur, et la facturation se fait par appel de modèle, les frais étant payés à la plateforme du modèle.
+- Avant la génération, un `--dry-run` est effectué pour montrer à l'utilisateur le nombre d'appels et les coûts, et l'exécution n'a lieu qu'après l'accord de l'utilisateur.
 
-## 用户要用时：帮他装好接上
+## Lorsque l'utilisateur souhaite l'utiliser : aidez-le à l'installer et à le connecter
 
-由你帮用户装好、接上，做到用户能直接开始。装之前说清装什么、从哪装；花钱的事由用户决定。已经知道的（参考视频、报告、要换成什么）不要再问。
+Vous devez aider l'utilisateur à l'installer et à le connecter afin qu'il puisse commencer directement. Avant l'installation, expliquez ce qui sera installé et d'où ; les questions d'argent sont à la discrétion de l'utilisateur. Ne posez plus de questions sur ce qui est déjà connu (vidéo de référence, rapport, ce qui doit être remplacé).
 
-1. 没装（`rea-video remake-plan` 报找不到仓库）：读 https://raw.githubusercontent.com/JuneYaooo/capsule-cinema/main/docs/install.md 照着装；装好后 `rea-video prefs capsule_root <安装目录>` 记下，`remake-run` 用装了它依赖的那个 Python（`--python`）。
-2. 密钥让用户自己填进安装目录的 `.env`，只告诉用户要填哪几个变量名，不要让用户把密钥贴进对话。
-3. 按 SKILL.md「复刻」问模型、要换什么，`rea-video plan` 出方案，再按下面出任务、dry-run、跑、拼回原时间线。
+1. Non installé ( `rea-video remake-plan` signale que le dépôt est introuvable) : Lisez https://raw.githubusercontent.com/JuneYaooo/capsule-cinema/main/docs/install.md et suivez les instructions d'installation ; une fois installé, utilisez `rea-video prefs capsule_root <répertoire d'installation>` pour l'enregistrer, et `remake-run` utilisera le Python avec ses dépendances installées (`--python`).
+2. Demandez à l'utilisateur de saisir ses clés dans le fichier `.env` du répertoire d'installation. Indiquez-lui uniquement les noms des variables à renseigner, ne lui demandez pas de coller les clés dans la conversation.
+3. Suivez SKILL.md « Reproduction » pour interroger le modèle et demander ce qui doit être remplacé, `rea-video plan` générera la solution, puis suivez les étapes ci-dessous pour créer les tâches, effectuer un dry-run, exécuter et réassembler la chronologie originale.
 
-## 怎么跑
+## Comment exécuter
 
-`prepare` 调 `rea-video remake-plan` 照报告第二部分的方案出任务和交接文件 `remake/handoff.json`（一个单元的每次调用一个任务，用 `remake/prompts.json` 里的最终提示词），方案检查有 ❌ 时不出任务；`run` 生成，`assemble` 按原片切点拆回各镜头、拼回并验收结构。方案不迁就执行端：capsule-cinema 还没接的模型会在 `remake-run` 时报错，这时把提示词和 `remake/refs/` 里的参考交给用户在模型自己的平台上生成。
+`prepare` appelle `rea-video remake-plan` pour générer les tâches et le fichier de transfert `remake/handoff.json` (chaque unité appelle une tâche à la fois, en utilisant le prompt final dans `remake/prompts.json`) selon la solution de la deuxième partie du rapport ; si la vérification de la solution contient ❌, aucune tâche n'est générée ; `run` génère, `assemble` divise le film original en plans, les réassemble et valide la structure. La solution ne s'adapte pas à l'exécution : les modèles non encore connectés à `capsule-cinema` provoqueront une erreur lors de `remake-run`. Dans ce cas, remettez le prompt et les références dans `remake/refs/` à l'utilisateur pour qu'il les génère sur la plateforme de son propre modèle.
 
-生成要用 capsule-cinema 自己的 Python 环境。`rea-video remake-run` / `capsule-draft` 会自动找 `$CAPSULE_CINEMA_PYTHON` 或 `<capsule-root>/.venv/bin/python`，也可以用 `--python` 指定。
+La génération doit utiliser l'environnement Python de `capsule-cinema`. `rea-video remake-run` / `capsule-draft` recherchera automatiquement `$CAPSULE_CINEMA_PYTHON` ou `<capsule-root>/.venv/bin/python`, ou vous pouvez spécifier avec `--python`.
 
 ```bash
-CC=$CAPSULE_CINEMA_ROOT   # capsule-cinema 仓库路径
+CC=$CAPSULE_CINEMA_ROOT   # Chemin du dépôt capsule-cinema
 cd $CC
-python3.12 scripts/remake_reference.py recipes /abs/out/ref                 # 先看有没有合适的配方；有就按配方做，没有再走下面的通用流程
-python3.12 scripts/remake_reference.py prepare /abs/out/ref                 # 出任务和交接文件，不计费
-python3.12 scripts/remake_reference.py run /abs/out/ref/remake/jobs.json --dry-run   # 先给用户看任务；--only G2 只跑一个单元
-python3.12 scripts/remake_reference.py run /abs/out/ref/remake/jobs.json    # 用户确认后再跑（计费）
-python3.12 scripts/remake_reference.py assemble /abs/out/ref                # 拼回原时间线 + compare.mp4 + 结构验收
+python3.12 scripts/remake_reference.py recipes /abs/out/ref                 # Vérifiez d'abord s'il existe des recettes appropriées ; si oui, suivez la recette, sinon suivez le processus générique ci-dessous
+python3.12 scripts/remake_reference.py prepare /abs/out/ref                 # Génère les tâches et les fichiers de transfert, sans facturation
+python3.12 scripts/remake_reference.py run /abs/out/ref/remake/jobs.json --dry-run   # Montre d'abord les tâches à l'utilisateur ; --only G2 n'exécute qu'une seule unité
+python3.12 scripts/remake_reference.py run /abs/out/ref/remake/jobs.json    # Exécute après confirmation de l'utilisateur (facturation)
+python3.12 scripts/remake_reference.py assemble /abs/out/ref                # Réassemble la chronologie originale + compare.mp4 + validation de la structure
 rea-video capsule-draft out/ref/breakdown.json --capsule-root $CC --capsule-name xxx [--write-capsule]
 ```
 
-- jobs.json 里每个任务的 `executor` 取值：
-  - `capsule_cinema`：调模型生成
-  - `local_ffmpeg`：静态图本地重建
-  - `keep_original`：保留原片，比如代码渲染、录屏、真实素材
-- `user_assets`：这个镜头需要用户提供的真实素材。生成结果只是近似，要提醒用户。
-- `capsule-draft`：通过 capsule-cinema 自带的 `tool_factory` 注入拆解结果，不改 capsule-cinema 代码，生成的配方草稿默认是 `review_required`。
+- Valeurs de `executor` pour chaque tâche dans jobs.json :
+  - `capsule_cinema` : appelle le modèle pour la génération
+  - `local_ffmpeg` : reconstruction locale d'images statiques
+  - `keep_original` : conserve le film original, par exemple le rendu de code, l'enregistrement d'écran, le matériel réel
+- `user_assets` : ce plan nécessite du matériel réel fourni par l'utilisateur. Le résultat généré n'est qu'une approximation, il faut en informer l'utilisateur.
+- `capsule-draft` : injecte les résultats de la décomposition via le `tool_factory` intégré de `capsule-cinema`, sans modifier le code de `capsule-cinema`. Le brouillon de recette généré est par défaut `review_required`.

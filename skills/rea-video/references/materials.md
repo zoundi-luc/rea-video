@@ -1,34 +1,34 @@
-# 用户真实素材
+# Matériel réel de l'utilisateur
 
-**定义**：画面里不是制作方生成或渲染、而是从现实中引入的像素，包括实拍视频、真实照片、网页/App 截图、录屏、版式里播放的视频片段、贴上去的 Logo / 商品图。复刻时这些必须由用户提供原文件，**不能写成"用 AI 生成"**。
+**Définition** : Pixels qui ne sont pas générés ou rendus par le producteur, mais introduits à partir de la réalité, y compris les vidéos filmées, les photos réelles, les captures d'écran de pages web/applications, les enregistrements d'écran, les extraits vidéo lus dans une mise en page, les logos/images de produits collés. Lors de la reproduction, ces éléments doivent être fournis par l'utilisateur sous forme de fichiers originaux et **ne peuvent pas être décrits comme "générés par IA"**.
 
-**和「参考素材」分开**：AI 视频、数字人、3D 画面里出现的商品、Logo、人物，像素是模型或渲染器做出来的，不算真实素材；它们记在 `material.references`，报告里是「复刻要准备的参考素材」，复刻时作为参考图（`@图片N`）喂给模型。实拍画面里的商品是道具，同样记为参考。
+**Distinction avec le "matériel de référence"** : Les produits, logos, personnages apparaissant dans les vidéos IA, les humains numériques, les images 3D, dont les pixels sont créés par le modèle ou le moteur de rendu, ne sont pas considérés comme du matériel réel ; ils sont enregistrés dans `material.references` et sont désignés dans le rapport comme "matériel de référence à préparer pour la reproduction", et sont utilisés comme images de référence (`@imageN`) pour le modèle lors de la reproduction. Les produits dans les images filmées sont des accessoires et sont également enregistrés comme références.
 
-## 工具怎么标
+## Comment l'outil les étiquette
 
-- **整帧**：
-  - 实拍 → 实拍视频素材
-  - 录屏/截图 → 录屏素材或界面截图（静止的算截图）
-  - 静帧/推拉且来源是照片或截图 → 真实照片或截图
-  - 静帧来源不明（没开 VLM）→ "图片素材（真实/AI 待确认）"，不计为真实素材
-- **嵌入**（只在渲染画面里检测，即代码渲染、录屏、3D、渲染卡片）：
-  - 照片纹理区域：灰度熵高、无平涂，且不在字幕带 → 照片/图片素材，**标为"真实还是 AI 待确认"**（模板里贴的也可能是 AI 图）。要么由 VLM 确认，要么你自己看图判断
-  - 浅色面板 + 单帧 ≥6 处小字 → 界面截图（直接算真实素材）
-  - 区域内有运动而周围静止 → 嵌入视频片段或录屏
-- **VLM**：`embedded_assets` 里 `is_real_material=true` 的条目。底层是渲染版式（代码、录屏、静图）时算嵌入素材，VLM 说的 `real_footage` 记为「嵌入视频片段」（它可能本身是 AI 视频）；底层是 AI 视频 / 数字人 / 实拍，或 3D 里的商品、Logo、人物，记为参考素材。
+- **Image entière** :
+  - Tournage réel → Matériel vidéo filmé
+  - Enregistrement d'écran/capture d'écran → Matériel d'enregistrement d'écran ou capture d'écran d'interface (les images fixes sont considérées comme des captures d'écran)
+  - Image fixe/panoramique/zoom dont la source est une photo ou une capture d'écran → Photo réelle ou capture d'écran
+  - Source d'image fixe inconnue (VLM non activé) → "Matériel image (réel/IA à confirmer)", non compté comme matériel réel
+- **Intégré** (détecté uniquement dans les images rendues, c'est-à-dire rendu par code, enregistrement d'écran, image fixe, carte rendue) :
+  - Zone de texture photo : entropie de gris élevée, pas de couleur unie, et pas dans la bande de sous-titres → Matériel photo/image, **étiqueté "réel ou IA à confirmer"** (les images collées dans le modèle peuvent aussi être des images IA). Soit le VLM le confirme, soit vous jugez vous-même l'image.
+  - Panneau clair + une seule image ≥ 6 petits caractères → Capture d'écran d'interface (directement considérée comme matériel réel)
+  - Mouvement dans la zone tandis que l'environnement est statique → Extrait vidéo intégré ou enregistrement d'écran
+- **VLM** : Éléments dans `embedded_assets` où `is_real_material=true`. Si le fond est une mise en page rendue (code, enregistrement d'écran, image fixe), il est considéré comme du matériel intégré ; le `real_footage` mentionné par le VLM est enregistré comme "extrait vidéo intégré" (il peut s'agir d'une vidéo IA elle-même) ; si le fond est une vidéo IA / humain numérique / tournage réel, ou des produits, logos, personnages en 3D, il est enregistré comme matériel de référence.
 
-## 已知漏检
+## Détections manquées connues
 
-- 暗色、半透明、作为氛围背景的照片（例如 mediank 的 NASA 背景图）：纹理对比太低，确定性检测不出来。看到深色模板时，要自己看一眼背景。
-- 暗色主题网页截图：不是浅色面板，检测不到，要看画面里有没有浏览器或界面框。
-- 实拍或 AI 画面里叠加的小 Logo、商品图：确定性层不在照片底图上做嵌入检测（容易误报），依赖 VLM。
+- Photos sombres, semi-transparentes, utilisées comme arrière-plan d'ambiance (par exemple, l'image de fond de la NASA de mediank) : le contraste de texture est trop faible, la détection de certitude ne peut pas les identifier. Lorsque vous voyez un modèle sombre, vous devez vérifier l'arrière-plan vous-même.
+- Captures d'écran de pages web à thème sombre : ce ne sont pas des panneaux clairs, elles ne sont pas détectées, vous devez vérifier s'il y a un navigateur ou un cadre d'interface dans l'image.
+- Petits logos, images de produits superposés sur des images filmées ou IA : la couche de certitude ne fait pas de détection d'intégration sur l'image de fond (facile aux fausses alertes), elle dépend du VLM.
 
-## 素材库空镜
+## Plans de coupe de la bibliothèque de matériel
 
-城市航拍、延时、风景、商务人物、手部特写这类和视频主体无关的实拍空镜，常是从素材网站买的，不是作者自己拍的。工具会把它们标成「实拍视频素材」。看图时在 `description` 写明「疑似素材库空镜」，交付时和作者自拍的素材分开列：复刻时到素材网站找同类即可，不用向用户要原片。
+Les plans de coupe filmés sans rapport avec le sujet principal de la vidéo, tels que les vues aériennes de villes, les time-lapses, les paysages, les personnages d'affaires, les gros plans de mains, sont souvent achetés sur des sites de matériel et ne sont pas filmés par l'auteur lui-même. L'outil les étiquettera comme "matériel vidéo filmé". Lors de l'examen des images, indiquez "plan de coupe de bibliothèque de matériel suspecté" dans la `description`, et listez-les séparément du matériel filmé par l'auteur lors de la livraison : pour la reproduction, il suffit de trouver des éléments similaires sur un site de matériel, il n'est pas nécessaire de demander les rushes originaux à l'utilisateur.
 
-影视片段（`film_footage`）同理：素材来自片方，交付时写「需要找原片对应片段，商用要授权」，不要写成用户自己的素材。
+Il en va de même pour les extraits de films/séries (`film_footage`) : le matériel provient de la société de production, indiquez "nécessite de trouver l'extrait original correspondant, l'utilisation commerciale nécessite une autorisation" lors de la livraison, ne l'écrivez pas comme le matériel de l'utilisateur.
 
-## 交付时的写法
+## Format de livraison
 
-逐条列出：镜头号、时间、素材类型、画面位置、内容描述，以及"复刻时需要你提供：……"。
+Listez chaque élément : numéro de plan, heure, type de matériel, position à l'écran, description du contenu, et "pour la reproduction, vous devrez fournir : ...".

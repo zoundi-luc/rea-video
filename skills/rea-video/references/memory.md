@@ -1,7 +1,7 @@
-# 记住用户的纠正和偏好
+# Mémoriser les corrections et préférences de l'utilisateur
 
-- 用户指出某个镜头判错（"这是定格动画不是 AI"、"这段是我自己拍的素材"）：运行
-  `rea-video correct out/ref --shots 3,5 --label stop_motion --note "<用户原话>"`（`--label` 填用户说的那一类，类别名见 `taxonomy.md`：定格动画是 `stop_motion`，静态图 + 推拉是 `still_motion`；也可用 `--start/--end` 指定时间段，`--shots all` 表示整条；真实素材用 `--real yes|no`）。
-  这会立刻改结论和报告，并记入 `~/.rea-video/corrections.jsonl`；以后拆同一个文件会自动套用，同类镜头会在复核任务里提示。
-- 用户说出长期偏好：能对应参数的用 `rea-video prefs engine kling2.1`、`prefs vlm on`、`prefs env_file <路径>`、`prefs reviewer <名字>`、`prefs capsule_root <capsule-cinema 路径>`；其余的用 `rea-video prefs --note "报告尽量短，重点写复刻方案"` 记下，下次 `rea-video memory` 会显示，按它调整回复。
-- 只记用户明确说的，不要把你自己的猜测写成纠正。纠正不会自动改分类权重；积累到几条以后，用 `rea-video memory --export-labels eval/user_labels.yaml` 导出成评测样本，再按开发约定评测、改规则（仓库 `docs/dev/evaluation.md`）。
+- L'utilisateur signale qu'un plan a été mal identifié ("C'est de l'animation image par image, pas de l'IA", "Cette séquence est mon propre matériel filmé") : exécutez
+  `rea-video correct out/ref --shots 3,5 --label stop_motion --note "<paroles originales de l'utilisateur>"` (`--label` doit correspondre à la catégorie mentionnée par l'utilisateur, voir `taxonomy.md` pour les noms de catégories : l'animation image par image est `stop_motion`, l'image fixe + pan/zoom est `still_motion` ; vous pouvez également utiliser `--start/--end` pour spécifier une période, `--shots all` pour toute la vidéo ; pour le matériel réel, utilisez `--real yes|no`).
+  Cela modifiera immédiatement le verdict et le rapport, et sera enregistré dans `~/.rea-video/corrections.jsonl` ; les futures analyses du même fichier appliqueront automatiquement cette correction, et les plans similaires seront signalés dans les tâches de révision.
+- L'utilisateur exprime des préférences à long terme : pour celles qui correspondent à des paramètres, utilisez `rea-video prefs engine kling2.1`, `prefs vlm on`, `prefs env_file <chemin>`, `prefs reviewer <nom>`, `prefs capsule_root <chemin_capsule-cinema>` ; pour les autres, utilisez `rea-video prefs --note "Rapports aussi courts que possible, en se concentrant sur les solutions de reproduction"` pour les enregistrer. La prochaine fois que vous exécuterez `rea-video memory`, elles s'afficheront et vous pourrez ajuster votre réponse en conséquence.
+- N'enregistrez que ce que l'utilisateur dit explicitement, ne transformez pas vos propres suppositions en corrections. Les corrections ne modifient pas automatiquement les poids de classification ; après en avoir accumulé quelques-unes, utilisez `rea-video memory --export-labels eval/user_labels.yaml` pour les exporter en tant qu'échantillons d'évaluation, puis évaluez et modifiez les règles selon les conventions de développement (dépôt `docs/dev/evaluation.md`).

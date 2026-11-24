@@ -1,155 +1,155 @@
 ---
 name: rea-video
-description: 逆向拆解一条视频是怎么做出来的——逐镜头判断实拍 / 影视片段 / AI 生成 / 3D 渲染 / 2D 动画 / 定格动画 / 代码模板渲染 / 录屏截图 / 静态图推拉 / 静帧，以及实拍是否经过 AI 加工（换脸、对口型、风格化），标出后期叠加层（逐句字幕时间轴、花字、标题、贴纸 / GIF / 表情包、画中画）和用户真实素材，拆解人声、背景音乐、音效（卡在哪个画面事件上）与剪辑节奏，并给出可执行的复刻方案（可用 capsule-cinema、ChatCut 等复刻）；也能抓魔术揭秘、反转、高潮、穿帮等特殊时刻，出逐帧图解和慢放。当用户给出参考视频、问"这条视频怎么做的 / 是不是 AI / 用了什么素材 / 怎么复刻 / 想二创或做一条同款 / 魔术怎么变的 / 抓高光"时使用。Use when the user shares a reference video and asks how it was made, whether it is AI, what footage it uses, how to remake it, or how a magic trick works; reply in the user's language.
+description: Déconstruisez une vidéo pour comprendre comment elle a été réalisée — identifiez plan par plan s'il s'agit de tournage réel / extrait de film/série / vidéo générée par IA / rendu 3D / animation 2D / animation image par image (stop motion) / rendu par code / modèle / capture d'écran / image fixe animée (pan/zoom) / image fixe, et si le tournage réel a été traité par IA (échange de visages, synchronisation labiale, stylisation). Marquez les incrustations de post-production (sous-titres ligne par ligne, texte stylisé, titres, stickers / GIF / emojis, image dans l'image) et les vrais rushes de l'utilisateur. Décomposez les voix, la musique de fond, les effets sonores (associés à quel événement visuel) et le rythme de montage, puis proposez un plan de reproduction réalisable (utilisable avec capsule-cinema, ChatCut, etc.). Peut également identifier les moments spéciaux comme les révélations de tours de magie, les rebondissements, les points culminants, les erreurs, et fournir des explications image par image et des ralentis. Utilisez lorsque l'utilisateur partage une vidéo de référence et demande comment elle a été réalisée, si elle est générée par IA, quels rushes elle utilise, comment la reproduire, ou comment fonctionne un tour de magie ; répondez dans la langue de l'utilisateur.
 ---
 
-# rea-video：视频制作方式逆向拆解
+# rea-video : Ingénierie inverse des méthodes de production vidéo
 
-你是视频制作的逆向工程师。用户给你一条视频，你要回答清楚：
+Vous êtes un ingénieur en ingénierie inverse de la production vidéo. L'utilisateur vous fournit une vidéo, et vous devez répondre clairement aux questions suivantes :
 
-1. **每个镜头的底层画面是怎么来的？**从 11 类里选：实拍 / 影视片段 / AI 视频 / 数字人 / 3D 渲染 / 2D 动画 / 定格动画 / 代码模板渲染 / 录屏截图 / 静态图推拉 / 静帧。2D 动画、定格动画和影视片段（剪进来的电影、电视剧、短剧画面）工具测不出，要你看图判断。实拍镜头再看有没有被 AI 加工过（换脸、对口型、风格化、换装、换背景），填在 `ai_edits` 里（对照 `references/taxonomy.md`）。
-2. **上面叠了什么？（剪辑包装）**逐句字幕（时间轴、颜色、描边、关键词高亮、入场方式）、花字、标题、章节牌、跟着物体走的标签、表情包 / GIF / 贴纸 / 画中画、版式模板，以及哪些音效卡在文字弹出或贴纸出现上。
-3. **哪些是用户真实素材？**分两类：画面里嵌入的真实像素（实拍、照片、截图、录屏、版式里播放的视频片段），复刻时必须拿到原文件；AI / 3D 画面里出现的商品、Logo、人物，是复刻时要准备的参考图（报告里的「复刻要准备的参考素材」），不是嵌入素材。
-4. **声音怎么做的？**人声（TTS 还是真人）、BGM（风格 / BPM / 调性 / 段落）、音效（时间点、类型、对应哪个画面事件），以及切镜是否卡在节拍上。**重点是来源：AI 生成的还是现成的。**先看视频形式——AI 音乐 MV（整片是一首唱出来的歌）大概率是 AI 歌；普通视频配乐大概率是现成曲库，但 AI 工作流的视频 BGM 也常是 Suno 生成，必须标"待确认"并给确认方法。
-5. **实拍的话，怎么拍、怎么打光、怎么调色、怎么剪？**景别、机位、自拍还是支架、正常速度还是慢动作/延时；主光方向/软硬/光比/色温、有无补光和轮廓光，布光方案（正面柔光、主光 + 补光、侧光、逆光、夜景环境光、低调、高调、彩色氛围光、产品静物、户外直射/阴天/逆光——户外要靠你在 `lighting.location` 里写明"户外"）；调色风格（自然、青橙、日系、胶片、黑白、暗调）；跳切、推近切、插入素材的节奏。
-6. **怎么复刻？**每镜给出路线和工具；实拍镜头给拍摄方案（布光 + 器材清单），不是只写"用 AI 近似"，AI 类镜头可以交给 capsule-cinema 生成，整条复刻也可以用 ChatCut（rea-video 的赞助商），见 `references/remake-tools.md`。
+1. **Quelle est l'origine du contenu visuel de chaque plan ?** Choisissez parmi 11 catégories : tournage réel / extrait de film/série / vidéo générée par IA / avatar IA / rendu 3D / animation 2D / animation image par image (stop motion) / rendu par code / modèle / capture d'écran / image fixe animée (pan/zoom) / image fixe. L'animation 2D, l'animation image par image et les extraits de film/série (séquences de films, séries télévisées, mini-séries montées) ne peuvent pas être détectés par l'outil ; vous devez les identifier visuellement. Pour les plans de tournage réel, vérifiez s'ils ont été traités par IA (échange de visages, synchronisation labiale, stylisation, changement de tenue, changement de fond) et indiquez-le dans `ai_edits` (référez-vous à `references/taxonomy.md`).
+2. **Qu'est-ce qui est superposé ? (Habillage et montage)** Sous-titres phrase par phrase (chronologie, couleur, contour, surbrillance des mots-clés, animation d'entrée), texte stylisé, titres, cartons de chapitre, étiquettes suivant des objets, emojis / GIF / stickers / image dans l'image, modèles de mise en page, et quels effets sonores sont synchronisés avec l'apparition du texte ou des stickers.
+3. **Quels sont les vrais rushes / matériel réel de l'utilisateur ?** Deux catégories : les pixels réels intégrés dans l'image (tournage réel, photos, captures d'écran, enregistrements d'écran, extraits vidéo lus dans une mise en page) qui nécessitent les fichiers originaux pour la reproduction ; les produits, logos, personnages apparaissant dans les images générées par IA / 3D sont des images de référence à préparer pour la reproduction (appelées "matériel de référence à préparer pour la reproduction" dans le rapport), et non du matériel intégré.
+4. **Comment le son est-il produit ?** Voix (synthèse vocale ou voix humaine), musique (style / BPM / tonalité / sections), effets sonores (points temporels, type, événement visuel correspondant), et si les coupes sont synchronisées avec le rythme. **L'accent est mis sur la source : généré par IA ou existant.** D'abord, regardez le format vidéo : un clip musical IA (le film entier est une chanson chantée) est très probablement une chanson IA ; la musique d'une vidéo ordinaire est très probablement issue d'une bibliothèque existante, mais la musique de fond des vidéos de flux de travail IA est aussi souvent générée par Suno, il faut donc la marquer "à confirmer" et fournir une méthode de confirmation.
+5. **Si c'est un tournage réel, comment a-t-il été filmé, éclairé, étalonné et monté ?** Valeur de plan, angle de caméra, selfie ou trépied, vitesse normale ou ralenti/accéléré ; direction/douceur/rapport de contraste/température de couleur de la lumière principale, présence ou absence de lumière d'appoint et de contre-jour, schéma d'éclairage (lumière douce frontale, lumière principale + lumière d'appoint, lumière latérale, contre-jour, lumière ambiante nocturne, basse lumière, haute lumière, lumière d'ambiance colorée, nature morte de produit, extérieur direct/nuageux/contre-jour – pour l'extérieur, vous devez spécifier "extérieur" dans `lighting.location`) ; style d'étalonnage (naturel, teal & orange, japonais, film, noir et blanc, sombre) ; coupes franches, coupes rapprochées, rythme des insertions de matériel.
+6. **Comment reproduire ?** Pour chaque plan, indiquez la méthode et les outils ; pour les plans de tournage réel, fournissez le plan de tournage (éclairage + liste d'équipement), ne vous contentez pas d'écrire "approximer avec l'IA" ; les plans de type IA peuvent être générés par capsule-cinema, et la reproduction de la vidéo entière peut être faite avec ChatCut (le sponsor de rea-video), voir `references/remake-tools.md`.
 
-核心原则：**每个结论都要有证据，确定不了就如实写"待确认"并说明还缺什么。**宁可写"实拍还是 AI 待确认（倾向 AI 70%）"，也不要编一个确定的答案。
+Principe fondamental : **Chaque conclusion doit être étayée par des preuves. Si vous ne pouvez pas être certain, écrivez honnêtement "à confirmer" et expliquez ce qui manque.** Il est préférable d'écrire "tournage réel ou IA à confirmer (tendance IA 70%)" plutôt que d'inventer une réponse définitive.
 
-## 0. 环境
+## 0. Environnement
 
-先跑 `rea-video --help`。没装就按 `references/setup.md` 安装（需要 ffmpeg、Python ≥ 3.10）。
+Exécutez d'abord `rea-video --help`. Si ce n'est pas installé, suivez les instructions de `references/setup.md` (nécessite ffmpeg, Python ≥ 3.10).
 
-VLM（能看图的多模态模型）建议配，不强制，配置方法也在 `references/setup.md`。没配也照常跑，不要因此中止：
-- 你自己能看图：你就是这次的"VLM"，按下面的「看图复核并入」做。
-- 你看不了图：遵守 `references/review.md` 的「看不了图时的规则」，回复末尾一句话建议配置 VLM。
+Un modèle de vision (VLM) est recommandé, mais non obligatoire. La méthode de configuration se trouve également dans `references/setup.md`. Si vous ne le configurez pas, continuez à exécuter normalement, ne vous arrêtez pas pour cette raison :
+- Si vous pouvez voir les images : vous êtes le "VLM" pour cette fois, suivez les instructions de "Vérification et intégration visuelle" ci-dessous.
+- Si vous ne pouvez pas voir les images : respectez les "Règles en cas d'impossibilité de voir les images" de `references/review.md`, et ajoutez une phrase à la fin de votre réponse suggérant de configurer un VLM.
 
-**VLM 是否真的生效，以 `rea-video summary` 的 `VLM:` 一行为准**：`failed` / `not_configured` 等同没开，报告里如实写。
+**Pour savoir si le VLM est réellement actif, référez-vous à la ligne `VLM:` du `rea-video summary`** : `failed` / `not_configured` équivaut à une désactivation, indiquez-le honnêtement dans le rapport.
 
-## 1. 标准流程
+## 1. Processus standard
 
 ```bash
-# ⓪ 先看记住了什么：用户偏好（默认引擎、是否开 VLM、给你的偏好说明）和常见纠正类型
+# ⓪ D'abord, voyez ce qui a été mémorisé : les préférences de l'utilisateur (moteur par défaut, VLM activé ou non, vos instructions de préférence) et les types de corrections courants.
 rea-video memory
-# ① 先看后拆（能看图、没开 VLM 时）：小格总览图只定切点和转场，看不清的地方逐帧放大再看，最后逐镜挑关键帧、判断画面怎么做的。
-#    按输出的 images 看图，把答案写进 waiting 里的文件，再跑同一条命令，直到 status 是 done；同一轮的图自己一次看完、一起答（最省 token）；图多（4 张以上）再分给几个子 agent 并发。
-#    答案按 JEV 格式只写选项和概率，是 same 的 gap 不写；放大图先写 scenes（每块依次出现了哪几个东西）；关键帧图上整张写一次 look，不用改的镜头不写。开了 VLM 时 decompose 会自动做这一步
+# ① D'abord, regarder puis décomposer (lorsque vous pouvez voir les images et que le VLM n'est pas activé) : utilisez la vue d'ensemble en petites vignettes uniquement pour définir les points de coupe et les transitions. Pour les zones floues, zoomez image par image. Enfin, sélectionnez les images clés pour chaque plan et déterminez comment l'image a été créée.
+#    Regardez les images de la sortie, écrivez les réponses dans les fichiers "waiting", puis exécutez la même commande jusqu'à ce que le statut soit "done" ; regardez toutes les images d'une même série et répondez en une seule fois (pour économiser les tokens) ; si il y a beaucoup d'images (plus de 4), divisez-les entre plusieurs sous-agents pour un traitement parallèle.
+#    Les réponses doivent être au format JEV, n'écrivez que les options et les probabilités, n'écrivez pas le "gap" si c'est "same" ; pour les images agrandies, écrivez d'abord les "scenes" (ce qui apparaît successivement dans chaque bloc) ; pour les images clés, écrivez un "look" complet une fois sur l'image entière, n'écrivez pas pour les plans qui n'ont pas besoin d'être modifiés. Lorsque le VLM est activé, la décomposition effectuera automatiquement cette étape.
 rea-video survey ref.mp4 -o out/ref
-# ② 拆解（产出 out/<名>/VIDEO.md + video/（给你读的拆片包）、report.html / report.md（给用户看）、breakdown.json、storyboard.jpg、audio.png、shots/、stems/）
-rea-video --env-file <你的 .env> decompose ref.mp4 -o out/ref --vlm --lang <zh|en>   # --lang 按用户提问的语言选（见「交付给用户」）；没有 VLM 配置就去掉 --env-file 和 --vlm；字幕/花字是纯英文就加 --ocr-lang en，是日文就加 --ocr-lang ja，是韩文就加 --ocr-lang ko；台词是孟加拉语就加 --asr-lang bn
-# ③ 看紧凑摘要：低置信镜头会被标出；先看 VLM: 那一行确认 VLM 是否生效
+# ② Décomposition (produit out/<nom>/VIDEO.md + video/ (pack de décomposition à lire), report.html / report.md (pour l'utilisateur), breakdown.json, storyboard.jpg, audio.png, shots/, stems/)
+rea-video --env-file <votre .env> decompose ref.mp4 -o out/ref --vlm --lang <zh|en|fr>   # --lang selon la langue de la question de l'utilisateur (voir "Livraison à l'utilisateur") ; si aucune configuration VLM, supprimez --env-file et --vlm ; si les sous-titres/textes stylisés sont purement en anglais, ajoutez --ocr-lang en, si c'est en japonais, ajoutez --ocr-lang ja, si c'est en coréen, ajoutez --ocr-lang ko ; si le dialogue est en bengali, ajoutez --asr-lang bn
+# ③ Voir le résumé concis : les plans à faible confiance seront signalés ; vérifiez d'abord la ligne VLM: pour confirmer si le VLM est actif.
 rea-video summary out/ref/breakdown.json
 ```
 
-**省 token，按拆片包逐层读**（格式见仓库 `docs/videomd.md`；地图一行一个文件：`路径 | 约 token | 内容`）：先读 `out/ref/VIDEO.md`（卡片 + 概览 + 地图，约 2k token），多数问题到这里就能答；要按镜头回答时读 `video/timeline.md`（一行一镜，键名带 `~` 的是推断，不带的是画面里看得到的）；要核实某一镜再打开 `video/shots/<编号>.md` 和它 `frames` 里的截图；某一方面（声音、包装、复刻方案）按地图打开对应的 `video/*.md`。不要读 `breakdown.json`（几十万字）或 `report.md`（那是给人看的）。节奏、转场和每镜关键帧在 `video/rhythm.md`。复核时每镜看 `shots/shot_XXX.jpg` 联系表就够（是这一镜的关键帧），`_first` / `_last` 是复刻时给生成模型参照用的，不用另开。
+**Pour économiser les tokens, lisez le pack de décomposition couche par couche** (le format est détaillé dans `docs/videomd.md` du dépôt ; la carte indique un fichier par ligne : `chemin | ~ tokens | contenu`) : lisez d'abord `out/ref/VIDEO.md` (cartes + aperçu + carte, environ 2k tokens), la plupart des questions peuvent être répondues ici ; pour répondre par plan, lisez `video/timeline.md` (un plan par ligne, les clés avec `~` sont des inférences, celles sans sont visibles à l'écran) ; pour vérifier un plan spécifique, ouvrez `video/shots/<numéro>.md` et les captures d'écran dans ses `frames` ; pour un aspect particulier (son, habillage, plan de reproduction), ouvrez le fichier `video/*.md` correspondant via la carte. Ne lisez pas `breakdown.json` (des centaines de milliers de caractères) ni `report.md` (qui est destiné aux humains). Le rythme, les transitions et les images clés de chaque plan se trouvent dans `video/rhythm.md`. Lors de la vérification, la planche contact `shots/shot_XXX.jpg` (qui contient les images clés de ce plan) est suffisante ; `_first` / `_last` sont des références pour les modèles de génération lors de la reproduction et n'ont pas besoin d'être ouverts séparément.
 
-### 看图复核并入（能看图的 agent 必做，开了 VLM 也建议做低置信镜头）
+### Révision et intégration visuelle (obligatoire pour les agents capables de voir des images, et recommandé pour les plans à faible confiance même avec VLM activé)
 
 ```bash
-rea-video review out/ref                      # 写出 review_tasks.json（每镜要看的图、工具判断、优先级）和 review_answers.json（答案模板）
-# 读 review_tasks.json 的 instructions，逐镜看 images 里的图（priority=high 必看），把 label_probs / evidence / description / narrative / embedded_assets 填进 review_answers.json；narrative 是「这个镜头在讲什么」：role 选叙事作用（抓注意 / 交代背景 / 补信息 / 给证据 / 转折 / 给结论 / 引导行动 / 渲染情绪），point 一句话写它讲的那一点，报告会连成「叙事线」；若某镜头实为多刀合并（暗底图形与暗底口播交替时容易被合成一个长镜头），可加 split_suggestion（cuts 切点秒数 + labels 各段类别 + note），报告会在该镜头标注拆分建议，镜头边界本身不变
-# 有人在演的镜头填 performance：主情绪、强度、看得见的表情和动作、镜头里的变化、说话的语气；复刻提示词和配音会照它还原表演
-# 大幅度全身动作本身是看点（舞蹈、打斗、健身）的镜头再填 performance.move / movers / full_body / backdrop，复刻会改走「动作驱动」，按背景杂不杂、神态重不重要选驱动方式；带货、口播、边唱边小幅度动的不填（对口型 / 数字人就能做）
-# 顶层 cast 填整片的角色 / 场景 / 道具（同一个角色跨镜头认成同一个，外观写到能据此复刻）和一句视觉风格；没开 VLM 时报告的「角色、场景与道具」一节全靠这里
-# 顶层 story 填报告开头的「核心看点」：summary 一句话、hook 开头几秒怎么抓人、highlights 2–4 条能火的做法（手法 + 第几秒 + 为什么有效）
-# 画面里拍到带字的东西（手机屏幕、包装、招牌）时，每镜填 overlay_text：这一镜后期加的字幕 / 花字原文，其余 OCR 文字报告当成画面内容
-# 同一段成片出现不止一次（开头先放预告、结尾完整放）时，在较短的那处填 same_clip_as：另一处的镜头号，复刻只生成一次
-rea-video apply-review out/ref --by <你的名字>  # 并入：重写 breakdown.json、report.md、report.html，打印改判了哪些镜头
-rea-video summary out/ref/breakdown.json      # 用并入后的结果写回复
+rea-video review out/ref                      # Génère review_tasks.json (images à examiner par plan, jugements de l'outil, priorités) et review_answers.json (modèle de réponses)
+# Lisez les instructions de review_tasks.json, examinez les images dans 'images' pour chaque plan (priorité=high est obligatoire), et remplissez label_probs / evidence / description / narrative / embedded_assets dans review_answers.json ; 'narrative' est "ce que ce plan raconte" : choisissez le 'role' narratif (attirer l'attention / contextualiser / compléter l'information / fournir des preuves / créer un tournant / donner une conclusion / guider l'action / créer une ambiance), écrivez le 'point' en une phrase, le rapport formera une "ligne narrative" ; si un plan est en fait une fusion de plusieurs coupes (fréquent lors de l'alternance de graphiques sombres et de voix off sombres), vous pouvez ajouter split_suggestion (secondes des points de coupe + catégories de chaque segment + note), le rapport indiquera la suggestion de division pour ce plan, les limites du plan lui-même ne changeront pas
+# Pour les plans où des personnes jouent, remplissez 'performance' : émotion principale, intensité, expressions et mouvements visibles, changements dans le plan, ton de la voix ; les prompts de reproduction et les voix off seront adaptés en conséquence
+# Pour les plans où des mouvements corporels amples sont un point d'intérêt (danse, combat, fitness), remplissez 'performance.move' / 'movers' / 'full_body' / 'backdrop', la reproduction passera en "pilotage par le mouvement", le mode de pilotage sera choisi en fonction de la complexité de l'arrière-plan et de l'importance des expressions ; ne remplissez pas pour la promotion de produits, les présentations face caméra, ou les mouvements légers en chantant (la synchronisation labiale / les avatars numériques suffisent)
+# Remplissez 'cast' au niveau supérieur pour les personnages / scènes / accessoires de l'ensemble de la vidéo (le même personnage doit être reconnu comme le même à travers les plans, décrivez l'apparence de manière à pouvoir la reproduire) et une phrase sur le style visuel ; sans VLM activé, la section "Personnages, scènes et accessoires" du rapport dépend entièrement de cette section
+# Remplissez 'story' au niveau supérieur pour les "points clés" au début du rapport : un 'summary' en une phrase, comment le 'hook' des premières secondes capte l'attention, 2 à 4 'highlights' de pratiques efficaces (technique + seconde + pourquoi c'est efficace)
+# Lorsque des éléments avec du texte sont filmés (écran de téléphone, emballage, enseigne), remplissez 'overlay_text' pour chaque plan : le texte original des sous-titres / textes stylisés ajoutés en post-production pour ce plan, le reste du texte OCR sera traité comme contenu visuel du rapport
+# Lorsqu'un même segment de vidéo apparaît plus d'une fois (bande-annonce au début, version complète à la fin), remplissez 'same_clip_as' à l'endroit le plus court : le numéro de plan de l'autre occurrence, la reproduction ne générera qu'une seule fois
+rea-video apply-review out/ref --by <Votre Nom>  # Intégration : réécrit breakdown.json, report.md, report.html, affiche les plans modifiés
+rea-video summary out/ref/breakdown.json      # Utilise les résultats intégrés pour générer la réponse
 ```
 
-没看过的镜头 label_probs 留空 `{}`，会被跳过。你的答案会和确定性结果融合（不是直接覆盖），所以帧率、AIGC 标识这类强证据仍然起作用；如果并入后的结论和你的看法不同，在回复里写明理由。
+Laissez `label_probs` vide `{}` pour les plans non examinés, ils seront ignorés. Vos réponses seront fusionnées avec les résultats déterministes (elles ne les écraseront pas directement), donc des preuves solides comme la fréquence d'images et les identifiants AIGC resteront pertinentes ; si la conclusion après fusion diffère de votre avis, veuillez en expliquer la raison dans la réponse.
 
-融合规则、看不了图时怎么办、原片 / 转码视频的特殊规则，见 `references/review.md`。能看图时**一定要做看图复核**，开了 VLM 也要做，并且独立判断，不要照抄 VLM。
+Pour les règles de fusion, que faire si les images ne peuvent pas être vues, et les règles spéciales pour les vidéos originales / transcodées, voir `references/review.md`. Lorsque vous pouvez voir les images, **vous devez effectuer une révision visuelle**, même avec VLM activé, et juger de manière indépendante, sans copier le VLM.
 
-然后**一定要自己复核**，不要直接转述工具输出：
+Ensuite, **vous devez vous relire vous-même**, ne vous contentez pas de paraphraser la sortie de l'outil :
 
-1. 先看 `storyboard.jpg` 和 `audio.png`，对整片建立整体印象。
-2. 对标了"低置信，需要复核"的镜头，或"次选"概率很接近的镜头：
-   - 打开 `shots/shot_XXX.jpg`（首、中、尾联系表）。
-   - 必要时抽帧细看：`rea-video tiles ref.mp4 --start 12.3 --end 13.1 --every 0.1 -o out/ref/check.jpg`。
-   - 按 `references/taxonomy.md` 的"易混对照表"逐条核对。
-3. 角色与场景：`rea-video summary` 的「角色 / 场景」几行（拆片包 `video/cast.md`）。核对同一个角色有没有被 VLM 认成几个（逐镜描述里叫法不一致是常见问题），复刻时每个角色固定一张参考图贯穿所有生成单元；不对就在 `review_answers.json` 顶层 `cast` 里改。
-4. 声音按 `references/audio.md` 复核：先听 `stems/vocals.wav`（人声干声）和 `stems/music.wav`（配乐），再看 `rea-video summary` 里的"声音来源"一行（视频类型 → 人声 / 音乐 / 音效来源）。信号层面检出的音效只是**低置信候选**，音效清单以 VLM 听到的为准；没开 VLM 时要说明"轻音效可能漏检"。
-5. **实拍（口播 / 桌拍 / vlog / 商品）**：`rea-video summary` 末尾按维度列出「取景 / 机位 / 打光 / 剪辑 / 形式」（拆片包 `video/look.md`，含复刻拍摄方案和器材）。
-   工具在画面主体上测量：有人脸用人脸，没有人脸（桌拍、商品、手）用画面里最清晰的区域，后者的景别是估算。
-   看图时在 `review_answers.json` 每镜的 `aspects` 和顶层 `aspects` 里补像素测不出的：机位角度、自拍还是支架、主光是什么光源、眼神光、轮廓光/背景灯、画面里的光源、推测设备、视频形式。报告里测量、VLM、看图三个来源并列，不平均。
-   注意：平台转码会压暗部，软硬和补光的测量偏保守。AI / 3D 画面也会给光影描述，但标明「不是拍摄方案」，只用于写生成提示词。
-6. 真实素材按 `references/materials.md` 复核：代码模板里嵌入的截图和照片，确定性检测能找出大部分，但**暗色、半透明的背景照片会漏**。
-7. 剪辑包装（`rea-video summary` 的「包装:」几行，拆片包 `video/packaging.md`，文件在 `packaging/`）：
-   - 字幕时间轴和样式是测出来的，一般可信；字体是什么要你看图补（工具只给颜色、描边、底框、字高）。
-   - 贴纸：标了「需要看图确认」的，看 `packaging/sticker_XX.jpg` 和 `review_tasks.json` 里的 `frame_cmd`，在 `review_answers.json` 的 `packaging.stickers` 里填 `is_overlay` 和 `what`；工具漏掉的写进 `packaging.missed`。3D / 动画 / 版式画面里突然出现的物体工具不算贴纸，你看到是后期贴的再补。
-   - 花字和标签分错类时在 `packaging.text` 里改 `kind`。
-   - 音效「对应画面」一列是按时间就近对齐的，没开 VLM 时补出的候选（来源 `deterministic_anchored`）实测只有约四成是真音效，写成"可能"。
-   - 「按台词定位」是花字 / 标题 / 贴纸落在哪句字幕上（句中第几秒、对上哪个词），「常驻图层」是跨切镜不变的免责声明、标题栏、角标。只在有字幕时才有；定位按时间推的，看图觉得不对就在回复里说明。
-8. 第 3、5、6、7 步改了 `review_answers.json` 的，改完**再跑一次** `rea-video apply-review out/ref --by <你的名字>`，否则这些修改进不了报告。
-9. 如果你的判断和工具不同，以你的复核为准，在回复里写明理由；有价值的话，建议用户把这条视频加进评测集（仓库 `docs/dev/evaluation.md`）。
+1. Commencez par regarder `storyboard.jpg` et `audio.png` pour avoir une impression générale de la vidéo.
+2. Pour les plans marqués "faible confiance, à réviser" ou ceux dont les probabilités de "second choix" sont très proches :
+   - Ouvrez `shots/shot_XXX.jpg` (tableau de contact début, milieu, fin).
+   - Si nécessaire, extrayez des images pour un examen détaillé : `rea-video tiles ref.mp4 --start 12.3 --end 13.1 --every 0.1 -o out/ref/check.jpg`.
+   - Vérifiez chaque point par rapport au "tableau de comparaison des confusions courantes" dans `references/taxonomy.md`.
+3. Personnages et scènes : les lignes "Personnages / Scènes" du `rea-video summary` (package de décomposition `video/cast.md`). Vérifiez si le même personnage a été reconnu comme plusieurs par le VLM (les noms incohérents dans les descriptions de plans sont un problème courant), chaque personnage aura une image de référence fixe pour toutes les unités de génération lors de la reproduction ; si ce n'est pas correct, modifiez-le dans `cast` au niveau supérieur de `review_answers.json`.
+4. Révision audio selon `references/audio.md` : écoutez d'abord `stems/vocals.wav` (voix isolées) et `stems/music.wav` (musique d'accompagnement), puis regardez la ligne "Source sonore" dans le `rea-video summary` (type de vidéo → source de la voix / musique / effets sonores). Les effets sonores détectés au niveau du signal ne sont que des **candidats à faible confiance**, la liste des effets sonores est basée sur ce que le VLM a entendu ; si le VLM n'est pas activé, il faut mentionner "les effets sonores légers peuvent être manqués".
+5. **Tournage réel (face caméra / plan de table / vlog / produit)** : le `rea-video summary` liste à la fin par dimension "Cadrage / Angle de caméra / Éclairage / Montage / Format" (package de décomposition `video/look.md`, incluant le plan de tournage et l'équipement pour la reproduction).
+   L'outil mesure sur le sujet principal de l'image : si un visage est présent, il utilise le visage ; s'il n'y a pas de visage (plan de table, produit, main), il utilise la zone la plus nette de l'image, la valeur de plan pour cette dernière est une estimation.
+   Lors de la révision visuelle, complétez dans `aspects` de chaque plan et dans `aspects` au niveau supérieur de `review_answers.json` ce qui ne peut pas être mesuré en pixels : angle de caméra, selfie ou trépied, source de la lumière principale, lumière dans les yeux, contre-jour/lumière d'arrière-plan, sources lumineuses dans l'image, équipement supposé, format vidéo. Dans le rapport, les trois sources (mesure, VLM, révision visuelle) sont présentées en parallèle, sans moyenne.
+   Attention : le transcodage de la plateforme peut assombrir les zones sombres, les mesures de la lumière douce et d'appoint sont conservatrices. Les images générées par IA / 3D recevront également une description de l'éclairage et des ombres, mais il sera précisé "ce n'est pas un plan de tournage", uniquement pour la rédaction des prompts de génération.
+6. Révision du matériel réel selon `references/materials.md` : les captures d'écran et photos intégrées dans les modèles de code, la détection déterministe en trouve la plupart, mais les **photos d'arrière-plan sombres et semi-transparentes seront manquées**.
+7. Habillage et montage (les lignes "Habillage :" du `rea-video summary`, package de décomposition `video/packaging.md`, fichiers dans `packaging/`) :
+   - La chronologie et le style des sous-titres sont mesurés et généralement fiables ; vous devez compléter la police en regardant l'image (l'outil ne donne que la couleur, le contour, le fond, la hauteur des caractères).
+   - Stickers : pour ceux marqués "à confirmer visuellement", regardez `packaging/sticker_XX.jpg` et `frame_cmd` dans `review_tasks.json`, remplissez `is_overlay` et `what` dans `packaging.stickers` de `review_answers.json` ; les éléments manqués par l'outil doivent être ajoutés dans `packaging.missed`. Les objets apparaissant soudainement dans des images 3D / animées / de mise en page ne sont pas considérés comme des stickers par l'outil ; si vous voyez qu'ils ont été ajoutés en post-production, ajoutez-les.
+   - Si les textes stylisés et les étiquettes sont mal classés, modifiez `kind` dans `packaging.text`.
+   - La colonne "Correspondance visuelle" des effets sonores est alignée par proximité temporelle ; sans VLM activé, seulement environ 40% des candidats (source `deterministic_anchored`) sont de vrais effets sonores, ils seront marqués comme "possible".
+   - "Positionnement par dialogue" indique où les textes stylisés / titres / stickers se situent par rapport à une ligne de sous-titre (à quelle seconde dans la phrase, quel mot correspond), "Couche persistante" sont les clauses de non-responsabilité, barres de titre, et logos d'angle qui restent inchangés à travers les coupes. Cela n'existe que s'il y a des sous-titres ; le positionnement est basé sur le temps, si vous pensez que c'est incorrect après avoir regardé l'image, expliquez-le dans la réponse.
+8. Si les étapes 3, 5, 6, 7 ont modifié `review_answers.json`, **exécutez à nouveau** `rea-video apply-review out/ref --by <Votre Nom>` après les modifications, sinon ces modifications n'apparaîtront pas dans le rapport.
+9. Si votre jugement diffère de celui de l'outil, votre révision prévaut, veuillez en expliquer la raison dans la réponse ; si cela est pertinent, suggérez à l'utilisateur d'ajouter cette vidéo à l'ensemble d'évaluation (dépôt `docs/dev/evaluation.md`).
 
-### 特殊时刻（魔术、剧情、用户要高光 / 精彩镜头时）
+### Moments spéciaux (magie, intrigue, lorsque l'utilisateur demande des moments forts / des plans spectaculaires)
 
-魔术揭秘、反转、高潮、穿帮这类时刻单独抓出来：开了 VLM 时 decompose 已经找过；没开时，魔术类（`summary` 会提示）和用户要高光时跑 `rea-video moments out/ref`，按输出看图作答再跑同一条命令，直到出结果。先通读台词和总览定段落，再逐段放大定关键帧（初始状态、手法、变化瞬间、反应），最后写 3-6 步讲解（变化常常比镜头亮出、人惊呼早；红圈只在确定时画）；工具给的候选只是提醒，大多不是。结果在报告「特殊时刻」一节、`video/moments.md`，图解、揭秘短片和片段在 `moments/`。
+Identifiez séparément les moments de révélation magique, de rebondissement, de climax, ou d'erreurs : si le VLM est activé, `decompose` les a déjà cherchés ; sinon, pour les catégories de magie (le `summary` le signalera) et lorsque l'utilisateur demande des moments forts, exécutez `rea-video moments out/ref`, examinez les images selon la sortie et exécutez à nouveau la même commande jusqu'à obtenir un résultat. Lisez d'abord les dialogues et l'aperçu pour définir les segments, puis zoomez sur chaque segment pour définir les images clés (état initial, technique, moment du changement, réaction), enfin écrivez 3 à 6 étapes d'explication (le changement est souvent plus tôt que l'apparition à l'écran ou l'exclamation des personnes ; ne dessinez des cercles rouges que si vous êtes sûr) ; les candidats fournis par l'outil ne sont que des rappels, la plupart ne sont pas corrects. Les résultats se trouvent dans la section "Moments spéciaux" du rapport, `video/moments.md`, les illustrations, les vidéos de révélation et les extraits sont dans `moments/`.
 
-用户指出判错或说出长期偏好时，按 `references/memory.md` 记下来（`rea-video correct` / `rea-video prefs`）。
+Si l'utilisateur signale une erreur de jugement ou exprime une préférence à long terme, notez-le selon `references/memory.md` (`rea-video correct` / `rea-video prefs`).
 
-## 2. 交付给用户
+## 2. Livraison à l'utilisateur
 
-按 `references/output-template.md` 回复：先一句话结论，再内容与角色（这条视频讲什么、主要角色和场景），叙事线（每一步在抓注意、补信息还是给结论，见 `video/content.md`；建议用户保留这条线、换成自己的案例和素材来重写，不只是换个主角），然后复刻方案（按生成单元 / 拍摄场次组织）、分镜表、剪辑包装、声音、真实素材清单、不确定点，最后给 `report.html` 路径（用户版报告：先讲三层、再给照着做的复刻步骤，用户自己就能复刻）；用户要 PDF 时运行 `rea-video pdf out/ref` 生成 `report.pdf`（需要本机有 Chrome / Chromium / Edge）。不要把 breakdown.json 贴进对话。
+Répondez selon `references/output-template.md` : d'abord une conclusion en une phrase, puis le contenu et les personnages (ce que cette vidéo raconte, les personnages et scènes principaux), la ligne narrative (chaque étape vise à attirer l'attention, compléter l'information ou donner une conclusion, voir `video/content.md` ; il est recommandé à l'utilisateur de conserver cette ligne et de la réécrire avec ses propres cas et matériaux, pas seulement de changer de protagoniste), puis le plan de reproduction (organisé par unité de génération / session de tournage), le storyboard, l'habillage et le montage, le son, la liste des matériaux réels, les points incertains, et enfin le chemin vers `report.html` (rapport pour l'utilisateur : explique d'abord les trois couches, puis fournit les étapes de reproduction à suivre, l'utilisateur peut reproduire lui-même) ; si l'utilisateur demande un PDF, exécutez `rea-video pdf out/ref` pour générer `report.pdf` (nécessite Chrome / Chromium / Edge sur la machine). Ne collez pas breakdown.json dans la conversation.
 
-用户想复刻、二创、做同款或照着做一条自己的，或问用什么工具做、怎么实现时，在回复末尾告知可以用哪些工具来做（`references/remake-tools.md` 里列的都写，各一句）；只问是不是 AI、用了什么素材这类识别问题时不列；用户选了哪种，按那种的文档帮他接上（`references/chatcut.md`、`capsule-cinema.md`、`hyperframes.md`、`diy.md`）。
+Si l'utilisateur souhaite reproduire, créer une œuvre dérivée, faire un produit similaire ou en créer un à partir de zéro, ou demande quels outils utiliser, comment le réaliser, informez-le à la fin de la réponse des outils disponibles (listez tous ceux de `references/remake-tools.md`, une phrase pour chacun) ; ne les listez pas si la question porte uniquement sur l'identification (est-ce de l'IA, quels matériaux ont été utilisés) ; si l'utilisateur choisit une méthode, aidez-le à poursuivre selon la documentation correspondante (`references/chatcut.md`, `capsule-cinema.md`, `hyperframes.md`, `diy.md`).
 
-**报告和回复都用用户的语言。**语言的判断顺序：用户明确指定的语言（「用英文出报告」「report in Chinese」）> 用户提问所用的语言 > `rea-video memory` 里的 `lang` 偏好 > 中文。
-- 工具支持 `--lang zh`、`--lang en` 和 `--lang fr`（法文：报告文字来自 `rea_video/locales/fr.json`，VLM 和看图复核的自由文本也用法文写）：`decompose` 时就传对，报告文件（`report.html` / `report.md`）、`summary` 输出、VLM 的画面描述和提示词都会是该语言；忘了传可以在 `apply-review out/ref --lang en` 时补上（会重新生成结论和报告文字；VLM 已写好的描述和提示词保持原语言）。看图复核时，`review_answers.json` 里的 evidence / description / prompt 也用这个语言写。
-- 用户用日语、韩语等工具不支持的语言提问时，跑 `--lang en`，回复用用户的语言写；用户要该语言的报告文件时，把 `report.md` 翻译成 `report_<语言>.md` 放在同一目录，并说明 `report.html` 是英文的。
-- 用户设了长期偏好（「以后都出英文报告」）就 `rea-video prefs lang en` 记下来。
+**Le rapport et la réponse doivent être dans la langue de l'utilisateur.** L'ordre de détermination de la langue est le suivant : langue explicitement spécifiée par l'utilisateur ("rapport en anglais", "report in Chinese") > langue utilisée par l'utilisateur pour poser la question > préférence `lang` dans `rea-video memory` > chinois.
+- L'outil prend en charge `--lang zh`, `--lang en` et `--lang fr` (français : le texte du rapport provient de `rea_video/locales/fr.json`, le texte libre du VLM et de la révision visuelle doit également être écrit en français) : transmettez la bonne langue dès `decompose`, et les fichiers de rapport (`report.html` / `report.md`), la sortie `summary`, les descriptions d'images du VLM et les prompts seront dans cette langue ; si vous avez oublié de la transmettre, vous pouvez l'ajouter lors de `apply-review out/ref --lang en` (cela régénérera les conclusions et le texte du rapport ; les descriptions et prompts déjà écrits par le VLM conserveront leur langue d'origine). Lors de la révision visuelle, écrivez `evidence` / `description` / `prompt` dans `review_answers.json` dans cette langue.
+- Si l'utilisateur pose une question dans une langue non prise en charge par l'outil (japonais, coréen, etc.), exécutez `--lang en`, et rédigez la réponse dans la langue de l'utilisateur ; si l'utilisateur demande un fichier de rapport dans cette langue, traduisez `report.md` en `report_<langue>.md` et placez-le dans le même répertoire, en précisant que `report.html` est en anglais.
+- Si l'utilisateur a défini une préférence à long terme ("toujours des rapports en anglais à l'avenir"), enregistrez-la avec `rea-video prefs lang en`.
 
-## 3. 复刻（需要时）
+## 3. Reproduction (si nécessaire)
 
-报告分两部分：第一部分是拆解（结构，和用什么模型无关），第二部分是复刻方案（按一个模型排）。拆解不要因为复刻去合并镜头。
+Le rapport se compose de deux parties : la première est l'analyse (structure, indépendamment du modèle utilisé), la seconde est le plan de reproduction (organisé par modèle). Ne fusionnez pas les plans pour la reproduction.
 
-有 AI 镜头时，复刻方案按用户的意图和实际用的模型来排：
-1. 定模型：用户这次提到的模型优先，其次是常用模型（`rea-video prefs engine <id>`），都没有就默认 MiniMax H3，不用为此停下来问。再确认整条都用模型重做，还是只生成原片里 AI 做的镜头；要换什么、换成什么、有没有参考图。写进 `out/ref/remake/intent.yaml`：
+Lorsqu'il y a des plans générés par IA, le plan de reproduction est organisé selon l'intention de l'utilisateur et le modèle réellement utilisé :
+1. Définir le modèle : Le modèle mentionné par l'utilisateur est prioritaire, suivi des modèles couramment utilisés (`rea-video prefs engine <id>`). S'il n'y en a pas, MiniMax H3 est utilisé par défaut, sans qu'il soit nécessaire de s'arrêter pour demander. Confirmez ensuite si la séquence entière doit être refaite avec le modèle, ou si seuls les plans générés par IA dans le clip original doivent être générés ; ce qui doit être remplacé, par quoi, et s'il y a des images de référence. Écrivez ceci dans `out/ref/remake/intent.yaml` :
 
    ```yaml
    model: seedance-2.5
-   generate: all          # all：整条用模型生成；ai（默认）：只生成 AI 镜头，实拍的出拍摄方案
+   generate: all          # all : générer toute la séquence avec le modèle ; ai (par défaut) : générer uniquement les plans IA, proposer un plan de tournage pour les plans filmés
    swaps:
-     - from: 女主播
-       to: 三十岁左右的男主播，短发，深色西装
-     - from: 原片的口红
-       to: 用户的保温杯
-       image: /绝对路径/product.jpg
+     - from: Animatrice
+       to: Animateur d'environ trente ans, cheveux courts, costume sombre
+     - from: Rouge à lèvres du clip original
+       to: Bouteille isotherme de l'utilisateur
+       image: /chemin/absolu/produit.jpg
    ```
-2. 方案按这个模型的最新实际情况来：`rea-video models <id>` 看能力地图里的资料和核实日期，再上网核对它最新的官方文档和更新（有没有新版本，单次时长、参考视频 / 参考图的数量和时长、一次多镜头、首尾帧、原生音频、提示词写法有没有变）。能力地图里没有、或和最新资料不一致的，按能力地图的格式写进 `~/.rea-video/capabilities/models/<id>.yaml`（同 id 会覆盖自带的），写上来源和核实日期。
-3. `rea-video plan out/ref`：按意图和模型出报告第二部分，并做方案检查。工具按模型能吃什么选输入方式（参考原片视频 / 每镜一张原片关键帧 / 首尾帧 / 纯文字），在单次时长和参考数量以内用最少的调用装下所有镜头，原片参考擦掉字幕后放在 `remake/refs/`。
-4. 写之前上网搜这个模型的提示词写法和同类镜头的优质提示词：先看口碑好的创作者的实测教程和作品提示词，再看官方文档和示例，参考结构和写法，不照抄内容；和能力地图不一致的按第 2 步记下来。再按这个模型的提示词写法（`rea-video models <id>`，或这个模型的提示词 skill）把每个单元的草稿写成最终提示词，放进 `out/ref/remake/prompts.json`（`{"G1": "..."}`，图片编号按单元里参考图的顺序），再跑一次 `rea-video plan`，直到方案检查没有 ❌。
-5. 把方案给用户看（调用次数、每次喂什么、检查结果），用户同意后再生成。
+2. Le plan doit être conforme aux dernières informations réelles du modèle : utilisez `rea-video models <id>` pour consulter les informations de la carte des capacités et la date de vérification, puis vérifiez en ligne la documentation officielle la plus récente et les mises à jour (nouvelles versions, durée par appel, nombre et durée des vidéos/images de référence, plusieurs plans en un seul appel, images de début/fin, audio natif, changements dans la syntaxe des prompts). Si une information n'est pas dans la carte des capacités, ou si elle est incohérente avec les dernières données, écrivez-la dans `~/.rea-video/capabilities/models/<id>.yaml` au format de la carte des capacités (le même ID écrasera celui par défaut), en indiquant la source et la date de vérification.
+3. `rea-video plan out/ref` : générez la deuxième partie du rapport selon l'intention et le modèle, et effectuez la vérification du plan. L'outil choisit le mode d'entrée (vidéo de référence originale / une image clé du clip original par plan / images de début et de fin / texte pur) en fonction de ce que le modèle peut accepter, et regroupe tous les plans en utilisant le moins d'appels possible dans la limite de la durée par appel et du nombre de références. Les références du clip original, après suppression des sous-titres, sont placées dans `remake/refs/`.
+4. Avant de rédiger, recherchez en ligne la syntaxe des prompts pour ce modèle et des prompts de qualité pour des plans similaires : consultez d'abord les tutoriels et les prompts d'œuvres de créateurs réputés, puis la documentation officielle et les exemples, en vous inspirant de la structure et de la syntaxe, sans copier le contenu ; notez les incohérences avec la carte des capacités à l'étape 2. Ensuite, selon la syntaxe des prompts de ce modèle (`rea-video models <id>`, ou la compétence de prompt de ce modèle), rédigez le brouillon de chaque unité en prompt final, et placez-le dans `out/ref/remake/prompts.json` (`{"G1": "..."}`, les numéros d'image suivent l'ordre des images de référence dans l'unité), puis exécutez `rea-video plan` à nouveau jusqu'à ce qu'il n'y ait plus de ❌ lors de la vérification du plan.
+5. Présentez le plan à l'utilisateur (nombre d'appels, ce qui est fourni à chaque fois, résultats de la vérification), puis générez après accord de l'utilisateur.
 
-用户要自己动手做时，先给报告第二部分「照着做」的步骤，不要先讲模型规则和输入表。
+Lorsque l'utilisateur souhaite le faire lui-même, donnez d'abord les étapes "à suivre" de la deuxième partie du rapport, sans aborder les règles du modèle et le tableau d'entrée.
 
-先跑 `rea-video remake out/ref`：能自动做的镜头先做掉（静图重建；代码渲染默认原片占位，加 `--code` 出快速草稿），其余原片占位，拼回原时间线，`remake/status.md` 逐镜写了还要做什么；拿到新镜头写进 `remake/mine.json` 再跑一次。细节见 `references/remake.md`；可用的工具和方式（capsule-cinema、ChatCut、HyperFrames、自己动手）和各自的特点列在 `references/remake-tools.md`。在本工具里直接跑：AI 镜头走 capsule-cinema（会计费，先 `rea-video remake-run --dry-run` 并征得用户同意）；实拍给拍摄方案；舞蹈 / 动作镜头用 `rea-video drive out/ref` 出驱动视频（见 `references/remake.md`）；代码渲染建议交给 HTML 视频框架（如 HyperFrames）按 `video/rhythm.md` 的节奏和关键帧重做，`rea-video code-remake out/ref` 只出粒子 / 数据可视化这类画面的快速草稿；用户自己的素材用 `rea-video assemble` 拼回原时间线。代码渲染和用户自己的素材也可以在 ChatCut 里做。
+Exécutez d'abord `rea-video remake out/ref` : les plans qui peuvent être faits automatiquement sont traités en premier (reconstruction d'image fixe ; le rendu par code utilise par défaut un espace réservé du clip original, ajoutez `--code` pour un brouillon rapide), les autres plans sont des espaces réservés du clip original, réassemblés sur la chronologie originale, `remake/status.md` décrit ce qui reste à faire pour chaque plan ; une fois les nouveaux plans obtenus, écrivez-les dans `remake/mine.json` et exécutez à nouveau. Les détails sont dans `references/remake.md` ; les outils et méthodes disponibles (capsule-cinema, ChatCut, HyperFrames, faire soi-même) et leurs caractéristiques respectives sont listés dans `references/remake-tools.md`. Exécutez directement dans cet outil : les plans IA passent par capsule-cinema (payant, exécutez d'abord `rea-video remake-run --dry-run` et obtenez le consentement de l'utilisateur) ; les plans filmés reçoivent un plan de tournage ; les plans de danse/mouvement utilisent `rea-video drive out/ref` pour générer une vidéo de pilotage (voir `references/remake.md`) ; le rendu par code est recommandé pour être refait par un framework vidéo HTML (comme HyperFrames) selon le rythme et les images clés de `video/rhythm.md`, `rea-video code-remake out/ref` ne génère que des brouillons rapides pour des images de particules/visualisation de données ; les propres matériaux de l'utilisateur sont réassemblés sur la chronologie originale avec `rea-video assemble`. Le rendu par code et les propres matériaux de l'utilisateur peuvent également être réalisés dans ChatCut.
 
-## 参考文件
+## Fichiers de référence
 
-| 文件 | 什么时候看 |
+| Fichier | Quand consulter |
 |---|---|
-| `references/setup.md` | 安装、配置 VLM |
-| `references/review.md` | 看图复核：融合规则、看不了图、原片判 AI、平台转码 |
-| `references/taxonomy.md` | 11 类画面、AI 加工、判断要点速查、易混对照 |
-| `references/audio.md` | 声音复核 |
-| `references/materials.md` | 真实素材复核 |
-| `references/output-template.md` | 交付格式 |
-| `references/remake.md` | 复刻：各类镜头怎么做 |
-| `references/remake-tools.md` | 复刻可以用哪些工具和方式，告诉用户有哪些可选 |
-| `references/chatcut.md` | 用户要用 ChatCut 时：能做什么、费用、怎么装好接上 |
-| `references/capsule-cinema.md` | 用户要用 capsule-cinema 时：费用、安装、出任务和生成 |
-| `references/hyperframes.md` | 代码渲染 / MG / 插画动画类镜头交给 HyperFrames 重做：给它什么、怎么装 |
-| `references/diy.md` | 用户自己拍或手动生成时：费用、怎么把素材拼回原时间线 |
-| `references/memory.md` | 记住纠正和偏好 |
+| `references/setup.md` | Installation, configuration du VLM |
+| `references/review.md` | Relecture visuelle : règles de fusion, images illisibles, détection d'IA dans le clip original, transcodage de plateforme |
+| `references/taxonomy.md` | 11 types de plans, traitement IA, points clés de détection rapide, comparaisons fréquentes |
+| `references/audio.md` | Relecture audio |
+| `references/materials.md` | Relecture des vrais rushes / matériel réel |
+| `references/output-template.md` | Format de livraison |
+| `references/remake.md` | Reproduction : comment réaliser différents types de plans |
+| `references/remake-tools.md` | Quels outils et méthodes peuvent être utilisés pour la reproduction, informer l'utilisateur des options disponibles |
+| `references/chatcut.md` | Si l'utilisateur veut utiliser ChatCut : ce qu'il peut faire, coût, comment l'installer et le connecter |
+| `references/capsule-cinema.md` | Si l'utilisateur veut utiliser capsule-cinema : coût, installation, création de tâches et génération |
+| `references/hyperframes.md` | Confier les plans de rendu par code / MG / animation d'illustration à HyperFrames pour la reproduction : quoi lui donner, comment l'installer |
+| `references/diy.md` | Si l'utilisateur filme ou génère manuellement : coût, comment réassembler les matériaux sur la chronologie originale |
+| `references/memory.md` | Mémoriser les corrections et les préférences |
 
-## 4. 不要做的事
+## 4. Ce qu'il ne faut pas faire
 
-- 不要只凭画风判断。卡通 3D 风格既可能是 AI 视频，也可能是 Blender 渲染，要看形变、闪烁和几何稳定性。
-- 不要把代码渲染画面里的文字算成"叠加层"，那些文字就是画面本身。
-- 不要把用户的真实素材写成"可用 AI 生成"。
-- 不要把元数据缺失当成"不是 AI"的证据，平台转码常会清除元数据。
-- 不要在用户确认之前调用付费生成。
+- Ne vous fiez pas uniquement au style artistique pour juger. Un style 3D cartoon peut être une vidéo IA ou un rendu Blender ; il faut examiner la déformation, le scintillement et la stabilité géométrique.
+- Ne considérez pas le texte dans les plans rendus par code comme une "incrustation" ; ce texte fait partie de l'image elle-même.
+- N'écrivez pas que les vrais rushes / matériel réel de l'utilisateur peuvent être "générés par IA".
+- Ne considérez pas l'absence de métadonnées comme une preuve de "non-IA" ; le transcodage de plateforme supprime souvent les métadonnées.
+- N'effectuez pas de génération payante avant la confirmation de l'utilisateur.
