@@ -120,7 +120,7 @@ def framing_words(shot: dict) -> tuple[str, str]:
     """Shot size, camera angle, subject position and camera move as a prompt prefix, (report language, English).
     The readers' free-text prompts tend to keep the style words and drop these, which flattens the camera in a remake."""
     from .aspects.base import seen
-    from .i18n import lang
+    from .i18n import from_en, lang, latin
 
     asp = shot.get("aspects") or {}
     fr = (asp.get("framing") or {}).get("result") or {}
@@ -135,7 +135,7 @@ def framing_words(shot: dict) -> tuple[str, str]:
     move = cm.get("move") or (v.get("camera_move") if v.get("camera_move") not in (None, "", "固定", "static") else None)
     from .aspects.vocab import ZH2EN, canon, show
 
-    loc = [x for x in (show(size), show(angle), comp or (where and (where[1] if lang() == "en" else where[0])),
+    loc = [x for x in (show(size), show(angle), comp or (where and (from_en(where[1]) if latin() else where[0])),
                        move and T("镜头{m}", "camera {m}", m=show(move))) if x]
 
     def en_of(x):  # the English prompt always gets English words, whatever the report language

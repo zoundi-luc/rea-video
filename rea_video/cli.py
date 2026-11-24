@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 
 from .util import ASR_LANGS, LOG, OCR_LANGS, load_env_files, read_json, setup_logging, read_image, write_json
-from .i18n import LANGS, T, U, set_lang, set_ui_lang
+from .i18n import LANGS, LATIN, T, U, from_en, set_lang, set_ui_lang
 from .classify import LABELS
 from .vlm import vlm_note
 
@@ -850,7 +850,8 @@ def cmd_prefs(args) -> int:
         return 2
     prefs = load_prefs()
     set_ui_lang(prefs.get("lang") if args.key == "lang" else ui_lang())  # `prefs lang en` answers in English right away
-    for k, desc in (PREF_KEYS_EN if ui_lang() == "en" else PREF_KEYS).items():
+    for k, desc in (PREF_KEYS_EN if ui_lang() in LATIN else PREF_KEYS).items():
+        desc = from_en(desc, ui_lang()) if ui_lang() in LATIN else desc
         print(f"{k:<9} = {prefs.get(k, U('（未设置）', '(not set)'))}    # {desc}")
     for i, n in enumerate(prefs.get("notes", []), 1):
         print(U(f"说明 {i}: {n}", f"Note {i}: {n}"))

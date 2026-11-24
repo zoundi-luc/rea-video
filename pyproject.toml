@@ -38,7 +38,7 @@ rea-video = "rea_video.cli:main"
 include = ["rea_video*"]
 
 [tool.setuptools.package-data]
-rea_video = ["capabilities/*.yaml", "capabilities/*.json", "capabilities/*.md", "capabilities/models/*.yaml"]
+rea_video = ["locales/*.json", "capabilities/*.yaml", "capabilities/*.json", "capabilities/*.md", "capabilities/models/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

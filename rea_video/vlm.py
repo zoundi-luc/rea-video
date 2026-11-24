@@ -584,6 +584,9 @@ def prompt_lang_note() -> str:
     """Appended to SHOT_PROMPT / WHOLE_PROMPT: free-text answers follow the report language (enum values stay as given)."""
     from .i18n import lang
 
+    if lang() == "fr":
+        return ("\n\nWrite every free-text value (evidence, description, style, summary, copy, prompts, aspects answers) in French. "
+                "Keep enum values exactly as listed. `image_prompt` and `video_prompt` in French; put the English version in `video_prompt_en`.")
     if lang() == "en":
         return ("\n\nWrite every free-text value (evidence, description, style, summary, copy, prompts, aspects answers) in English. "
                 "Keep enum values exactly as listed. `image_prompt` and `video_prompt` in English; `video_prompt_en` may repeat it.")
