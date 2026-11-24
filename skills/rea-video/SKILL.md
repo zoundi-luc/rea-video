@@ -98,7 +98,7 @@ rea-video summary out/ref/breakdown.json      # 用并入后的结果写回复
 用户想复刻、二创、做同款或照着做一条自己的，或问用什么工具做、怎么实现时，在回复末尾告知可以用哪些工具来做（`references/remake-tools.md` 里列的都写，各一句）；只问是不是 AI、用了什么素材这类识别问题时不列；用户选了哪种，按那种的文档帮他接上（`references/chatcut.md`、`capsule-cinema.md`、`hyperframes.md`、`diy.md`）。
 
 **报告和回复都用用户的语言。**语言的判断顺序：用户明确指定的语言（「用英文出报告」「report in Chinese」）> 用户提问所用的语言 > `rea-video memory` 里的 `lang` 偏好 > 中文。
-- 工具支持 `--lang zh` 和 `--lang en`：`decompose` 时就传对，报告文件（`report.html` / `report.md`）、`summary` 输出、VLM 的画面描述和提示词都会是该语言；忘了传可以在 `apply-review out/ref --lang en` 时补上（会重新生成结论和报告文字；VLM 已写好的描述和提示词保持原语言）。看图复核时，`review_answers.json` 里的 evidence / description / prompt 也用这个语言写。
+- 工具支持 `--lang zh`、`--lang en` 和 `--lang fr`（法文：报告文字来自 `rea_video/locales/fr.json`，VLM 和看图复核的自由文本也用法文写）：`decompose` 时就传对，报告文件（`report.html` / `report.md`）、`summary` 输出、VLM 的画面描述和提示词都会是该语言；忘了传可以在 `apply-review out/ref --lang en` 时补上（会重新生成结论和报告文字；VLM 已写好的描述和提示词保持原语言）。看图复核时，`review_answers.json` 里的 evidence / description / prompt 也用这个语言写。
 - 用户用日语、韩语等工具不支持的语言提问时，跑 `--lang en`，回复用用户的语言写；用户要该语言的报告文件时，把 `report.md` 翻译成 `report_<语言>.md` 放在同一目录，并说明 `report.html` 是英文的。
 - 用户设了长期偏好（「以后都出英文报告」）就 `rea-video prefs lang en` 记下来。
 

@@ -192,8 +192,10 @@ def build_tasks(breakdown: dict, out_dir: str) -> tuple[dict, dict]:
         s["tool"]["evidence"] = [e for e in s["tool"]["evidence"] if e not in common]
         if "aspects" in s:
             s["aspects"] = _strip_glosses(s["aspects"])
-    instructions = INSTRUCTIONS.replace("<PROMPT_LANG>", "英文" if breakdown.get("lang") == "en" else "中文")
-    if breakdown.get("lang") == "en":
+    instructions = INSTRUCTIONS.replace("<PROMPT_LANG>", {"en": "英文", "fr": "法文"}.get(breakdown.get("lang"), "中文"))
+    if breakdown.get("lang") == "fr":
+        instructions += "\n\n报告语言是法文：evidence、description、image_prompt、video_prompt 和其他自由文本都用法文写（video_prompt_en 写英文版）。"
+    elif breakdown.get("lang") == "en":
         instructions += "\n\n报告语言是英文：evidence、description、image_prompt、video_prompt 和其他自由文本都用英文写（video_prompt_en 可以和 video_prompt 相同）。"
     # run from the package directory: `tiles .` finds the video, so this file carries no local path
     tasks = {"instructions": instructions, "video": Path(str(video)).name, "storyboard": "storyboard.jpg",

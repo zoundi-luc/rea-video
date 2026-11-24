@@ -6,18 +6,27 @@ Chinese is the source language of every user-facing string; English sits next to
   LangDict(zh={...}, en={...})  a code -> text mapping that resolves per language, so existing `X_ZH[code]`
                                 lookups (and the `*_zh` fields they fill in breakdown.json) follow the language
 
+French ("fr") is a third language built on the English one: every English string is looked up in
+`locales/fr.json` (English text -> French text); a string missing there stays in English. Set REA_I18N_MISSES to a
+file path to append each missing string to it (used to complete the catalogue).
+
 The language is set once per run (`set_lang`), from `--lang` / prefs, and stored in breakdown["lang"] so
 `finalize` / `summary` / `apply-review` render later in the same language. Default: zh.
 """
 from __future__ import annotations
 
 import contextvars
+import json
+import os
 import re
+from pathlib import Path
 from collections.abc import Mapping
 from typing import Iterator
 
-LANGS = ("zh", "en")
-LANG_NAMES = {"zh": "中文", "en": "English"}
+LANGS = ("zh", "en", "fr")
+LANG_NAMES = {"zh": "中文", "en": "English", "fr": "Français"}
+LATIN = ("en", "fr")  # languages written from the English strings (punctuation, separators, word order)
+_CATALOGS: dict[str, dict[str, str]] = {}
 _lang: contextvars.ContextVar[str] = contextvars.ContextVar("rea_video_lang", default="zh")
 _ui_lang: contextvars.ContextVar[str] = contextvars.ContextVar("rea_video_ui_lang", default="zh")
 
@@ -44,9 +53,47 @@ def lang() -> str:
     return _lang.get()
 
 
+def latin(code: str | None = None) -> bool:
+    """True for the languages built on the English strings (en, fr): English-style punctuation and separators."""
+    return (code or _lang.get()) in LATIN
+
+
+def _catalog(code: str) -> dict[str, str]:
+    if code not in _CATALOGS:
+        path = Path(__file__).with_name("locales") / f"{code}.json"
+        try:
+            _CATALOGS[code] = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            _CATALOGS[code] = {}
+    return _CATALOGS[code]
+
+
+def _miss(en: str) -> None:
+    path = os.getenv("REA_I18N_MISSES")
+    if path:
+        try:
+            with open(path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(en, ensure_ascii=False) + "\n")
+        except OSError:
+            pass
+
+
+def from_en(en: str, code: str | None = None) -> str:
+    """An English string in the given (default: current) language: unchanged for en, looked up for fr."""
+    code = code or _lang.get()
+    if code in ("zh", "en") or not isinstance(en, str) or not en.strip():
+        return en
+    out = _catalog(code).get(en)
+    if out is None:
+        _miss(en)
+        return en
+    return out
+
+
 def T(zh: str, en: str | None = None, **kw) -> str:
     """Text for the current language; `en` missing falls back to zh. kwargs are applied with str.format."""
-    s = en if (en is not None and _lang.get() == "en") else zh
+    code = _lang.get()
+    s = from_en(en, code) if (en is not None and code in LATIN) else zh
     return s.format(**kw) if kw else s
 
 
@@ -64,7 +111,8 @@ def ui_lang() -> str:
 
 def U(zh: str, en: str, **kw) -> str:
     """CLI help / diagnostic text for the current CLI language."""
-    s = en if _ui_lang.get() == "en" else zh
+    code = _ui_lang.get()
+    s = from_en(en, code) if code in LATIN else zh
     return s.format(**kw) if kw else s
 
 
@@ -112,8 +160,9 @@ class LangDict(Mapping):
         self._en = dict(en or {})
 
     def __getitem__(self, key):
-        if _lang.get() == "en" and key in self._en:
-            return self._en[key]
+        code = _lang.get()
+        if code in LATIN and key in self._en:
+            return from_en(self._en[key], code)
         return self._zh[key]
 
     def __iter__(self) -> Iterator:

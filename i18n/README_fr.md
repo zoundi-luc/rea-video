@@ -51,6 +51,21 @@ Vous pouvez brancher un modèle qui comprend la vidéo — Gemini et Doubao marc
 
 > Le rapport est rédigé dans la langue de votre demande (chinois ou anglais). Les rapports d'exemple ci-dessous sont en anglais.
 
+### Rapports en français (ce fork)
+
+Ce fork ajoute le français comme troisième langue de rapport : `--lang fr` (ou `rea-video prefs lang fr` pour en faire la langue par défaut).
+Le rapport (`report.html` / `report.md`), le paquet `VIDEO.md`, le résumé `rea-video summary`, l'aide de la ligne de commande et les consignes données au modèle de vision passent en français.
+
+```bash
+rea-video prefs lang fr
+rea-video decompose ma-video.mp4 -o out/ma-video --lang fr
+```
+
+- Les textes viennent du catalogue `rea_video/locales/fr.json` (texte anglais → texte français). Une phrase absente du catalogue reste en anglais.
+- Pour compléter le catalogue : lancez l'outil avec `REA_I18N_MISSES=manquants.txt`, puis `python scripts/translate_catalog.py manquants.json rea_video/locales/fr.json --env-file <votre .env>` (n'importe quel modèle compatible OpenAI, par exemple via OpenRouter).
+- Les descriptions déjà écrites par le modèle de vision gardent leur langue d'origine : relancez `decompose --lang fr` pour les avoir en français.
+
+
 ## Ce qu'il sait analyser
 
 | Type de vidéo | Exemples | Ce que vous obtenez |

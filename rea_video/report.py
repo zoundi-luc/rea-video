@@ -290,7 +290,7 @@ def _sound_brief(b: dict) -> tuple[str, str]:
     what, how = [], []
     vs = (src.get("voice") or {}).get("source")
     if (a.get("voice") or {}).get("present"):
-        what.append(T("人声", "voice") + (f"（{(src.get('voice') or {}).get('source_zh')}）" if vs and vs != "unknown" else ""))
+        what.append(T("人声", "voice") + (T("（{x}）", " ({x})", x=(src.get('voice') or {}).get('source_zh')) if vs and vs != "unknown" else ""))
         if vs in _USER_VOICE_HOW:
             how.append(T("人声：", "voice: ") + _USER_VOICE_HOW[vs].split(T("：", ": "))[0])
     mu = a.get("music") or {}

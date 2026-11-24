@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import argparse
 
-from .i18n import ui_lang
+from .i18n import LATIN, from_en, ui_lang
 
 _CAPSULE_ROOT = "capsule-cinema repo; defaults to $CAPSULE_CINEMA_ROOT, prefs capsule_root, then ~/code/github/capsule-cinema"
 _OUT_DIR = "decompose output directory"
@@ -168,17 +168,22 @@ HELP = {
 
 def localize(parser: argparse.ArgumentParser, labels: str = "") -> None:
     """Swap the parser's help text for English when the CLI language is English."""
-    if ui_lang() != "en":
+    code = ui_lang()
+    if code not in LATIN:
         return
-    parser.description = HELP[""]
+
+    def tr(text):
+        return from_en(text, code)
+
+    parser.description = tr(HELP[""])
     for action in parser._actions:
         if isinstance(action, argparse._SubParsersAction):
             for row in action._choices_actions:
-                row.help = HELP.get(row.dest, row.help)
+                row.help = tr(HELP[row.dest]) if row.dest in HELP else row.help
             for name, sub in action.choices.items():
                 for arg in sub._actions:
                     text = HELP.get(f"{name}.{arg.dest}")
                     if text and arg.help != argparse.SUPPRESS:
-                        arg.help = text.replace("{labels}", labels)
+                        arg.help = tr(text).replace("{labels}", labels)
         elif action.dest in HELP and action.help != argparse.SUPPRESS:
-            action.help = HELP[action.dest]
+            action.help = tr(HELP[action.dest])
